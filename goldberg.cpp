@@ -28,6 +28,7 @@ void initializations(int s, graph capacity, int num_vertices)
     C = capacity;
     Cf = capacity;
     e.assign(N, 0);
+    d.assign(N, 0);
     e[s] = inf;
     
 }
@@ -137,7 +138,10 @@ void relabel()
 
     for (int i = 0; i < N; i++)
     {
-        D[i] = d;
+        for (int j = 0; j < N; j++)
+        {
+            D[i][j] = d[j];
+        }
     }
 }
 
@@ -147,7 +151,7 @@ void update_excess()
     {
         for (int j = 0; j < N; j++)
         {
-            e[i] -= sigma[j][i];
+            e[i] += sigma[j][i];
         }
     }
 }
