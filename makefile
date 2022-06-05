@@ -12,5 +12,8 @@ main.o: main.cpp
 goldberg.o: goldberg.cpp
 	$(CXX) $(CXXFLAGS) -c -fpic goldberg.cpp
 
+graph_gen.o: graph_gen.cpp
+	$(CXX) $(CXXFLAGS) -c -fpic graph_gen.cpp
+
 clean:
 	$(RM) $(EXEC) *.o

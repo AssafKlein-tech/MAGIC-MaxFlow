@@ -1,18 +1,18 @@
 #include "goldberg.cpp"
-
+#include "graph_gen.cpp"
 // vector<vector<int>> capacity, flow;
-graph flow;
+graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
+int n;
 
-
-int n = 6;
-graph capacity{{0, 16, 13, 0, 0, 0},
-                {0, 0, 10, 12, 0, 0},
-                {0, 4, 0, 0, 14, 0},
-                {0, 0, 9, 0, 0, 20},
-                {0, 0, 0, 7, 0, 4},
-                {0, 0, 0, 0, 0, 0}};
+// int n = 6;
+// graph capacity{{0, 16, 13, 0, 0, 0},
+//                 {0, 0, 10, 12, 0, 0},
+//                 {0, 4, 0, 0, 14, 0},
+//                 {0, 0, 9, 0, 0, 20},
+//                 {0, 0, 0, 7, 0, 4},
+//                 {0, 0, 0, 0, 0, 0}};
 
 // int n = 3;
 // vector<vector<int>> capacity{{0, 3, 0},
@@ -87,6 +87,7 @@ int max_flow(int s, int t)
 
 int main()
 {
+    graph_gen(&capacity, &n);
     int maxflow = max_flow(0, n-1);
     cout << maxflow << endl;
     // string s = to_string(maxflow);

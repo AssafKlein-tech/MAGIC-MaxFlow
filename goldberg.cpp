@@ -1,5 +1,5 @@
 #ifndef GOLDBERG_CPP
-#define DEFINE_CPP
+#define GOLDBERG_CPP
 
 #include <iostream>
 #include <stdio.h>
@@ -124,11 +124,10 @@ void calc_outflow()
         }
     }
 
-    int temp, sum;
+    int sum;
 
     for (int i = 0; i < N; i++)
     {
-        temp = 0;
         sum = 0;
         for (int j = N-1; j >= 0; j--)
         {
