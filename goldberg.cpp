@@ -17,6 +17,47 @@ graph Cf, D, C, sigma, F;
 vi d, e;
 int N;
 
+
+void print_e()
+{
+    cout<< "e_vector:" << endl;
+    for(size_t i = 0; i < e.size(); i++)
+        cout << (e[i]) << endl;
+}
+
+void print_sigma()
+{
+    cout<< "sigma:" << endl;
+    for(size_t i = 0; i < sigma.size(); i++)
+    {
+        for(size_t j = 0; j < sigma[i].size(); j++)
+            cout << (sigma[i][j]) << " ";
+        cout << endl;
+    }
+}
+
+void print_D()
+{
+    cout<< "D:" << endl;
+    for(size_t i = 0; i < D.size(); i++)
+    {
+        for(size_t j = 0; j < D[i].size(); j++)
+            cout << (D[i][j]) << " ";
+        cout << endl;
+    }
+}
+
+void print_Cf()
+{
+    cout<< "Cf:" << endl;
+    for(size_t i = 0; i < Cf.size(); i++)
+    {
+        for(size_t j = 0; j < Cf[i].size(); j++)
+            cout << (Cf[i][j]) << " ";
+        cout << endl;
+    }
+}
+
 void initializations(int s, graph capacity, int num_vertices)
 {
     // Initializations
@@ -36,31 +77,31 @@ void initializations(int s, graph capacity, int num_vertices)
 void pre_flow()
 {
     d[0] = N;
+    int sum = 0;
+    vi temp_preflow = Cf[0];
+    (Cf[0]).assign(N, 0);
     for (int i = 0; i < N; i++)
     {
         D[i][0] = d[0];
-        vi temp_preflow = Cf[0];
-        (Cf[0]).assign(N, 0);
 
-        int sum = 0;
-
-        for (int i = 0; i < N; i++)
-        {
-            Cf[0][i] = temp_preflow[i];
-            sum += temp_preflow[i];
-        }
+        Cf[i][0] = temp_preflow[i];
+        sum += temp_preflow[i];
 
         e = temp_preflow;
         e[0] = -sum;
     }
-
+    // print_e();
+    // print_Cf();
 }
+
 
 bool check_excess()
 {
     // Returns true if theres at least one non-zero value in excess, excluding {s,t}
     for (int i = 1; i < N - 1; i++)
     {
+
+
         if (e[i] != 0)
             return true;
     }
@@ -69,15 +110,16 @@ bool check_excess()
 
 void calc_outflow()
 {
-    graph D_binary, Cf_temp;
+    graph D_binary, Cf_temp, Cf_sum;
     D_binary.assign(N, vi(N, 0));
     Cf_temp.assign(N, vi(N, 0));
-
+    Cf_sum.assign(N, vi(N, 0));
+    
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
-            D_binary[i][j] = ((D[i][j] - d[i]) == 1) ? 1 : 0;
+            D_binary[i][j] = ((d[i] - D[i][j]) == 1) ? 1 : 0;
             Cf_temp[i][j] = D_binary[i][j] * Cf[i][j];
         }
     }
@@ -90,15 +132,28 @@ void calc_outflow()
         sum = 0;
         for (int j = N-1; j >= 0; j--)
         {
-            temp = Cf_temp[i][j];
-            Cf_temp[i][j] = sum;
-            sum += temp;
+            // prefix sum
+            Cf_sum[i][j] = sum;
+            sum += Cf_temp[i][j];
             // Take the minimum
-            sigma[i][j] = ((e[i] - Cf_temp[i][j]) < Cf_temp[i][j]) ? (e[i] - Cf_temp[i][j]) : Cf_temp[i][j];
+            sigma[i][j] = ((e[i] - Cf_sum[i][j]) < Cf_temp[i][j]) ? (e[i] - Cf_sum[i][j]) : Cf_temp[i][j];
+            sigma[i][j] = (sigma[i][j] > 0) ? sigma[i][j] : 0;
             // Calc the excess leftover
             e[i] -= sigma[i][j];
         }
     }
+    // // Some prints
+    // cout<< "Cf_temp:" << endl;
+    // for(size_t i = 0; i < Cf_temp.size(); i++)
+    // {
+    //     for(size_t j = 0; j < Cf_temp[i].size(); j++)
+    //         cout << (Cf_temp[i][j]) << " ";
+    //     cout << endl;
+    // }
+    // print_e();
+    // print_sigma();
+    // print_Cf();
+    // print_D();
 }   
 
 void push_flow()
@@ -110,8 +165,8 @@ void push_flow()
             F[i][j] += sigma[i][j];
             Cf[i][j] -= sigma[i][j];
             // Transposed operations
-            F[i][j] += sigma[j][i];
-            Cf[i][j] -= sigma[j][i];
+            F[i][j] -= sigma[j][i];
+            Cf[i][j] += sigma[j][i];
         }
     }
 }

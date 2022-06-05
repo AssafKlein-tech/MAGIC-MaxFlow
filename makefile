@@ -13,4 +13,4 @@ goldberg.o: goldberg.cpp
 	$(CXX) $(CXXFLAGS) -c -fpic goldberg.cpp
 
 clean:
-	$(RM) $(EXEC) main.o
+	$(RM) $(EXEC) *.o

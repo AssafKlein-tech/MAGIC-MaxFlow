@@ -13,10 +13,12 @@ graph capacity{{0, 16, 13, 0, 0, 0},
                 {0, 0, 9, 0, 0, 20},
                 {0, 0, 0, 7, 0, 4},
                 {0, 0, 0, 0, 0, 0}};
-/*
-vector<vector<int>> capacity{{0, 1},
-                            {0, 0}};
-*/
+
+// int n = 3;
+// vector<vector<int>> capacity{{0, 3, 0},
+//                             {0, 0, 2},
+//                             {0, 0, 0}};
+
 
 void push(int u, int v)
 {
@@ -85,7 +87,7 @@ int max_flow(int s, int t)
 
 int main()
 {
-    int maxflow = max_flow(0, 5);
+    int maxflow = max_flow(0, n-1);
     cout << maxflow << endl;
     // string s = to_string(maxflow);
     // printf("%s", s);
