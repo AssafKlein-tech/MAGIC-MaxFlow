@@ -1,5 +1,6 @@
 #include "goldberg.cpp"
 #include "graph_gen.cpp"
+#include <chrono>
 // vector<vector<int>> capacity, flow;
 graph flow, capacity;
 vi height, excess, seen;
@@ -88,14 +89,24 @@ int max_flow(int s, int t)
 
 int main()
 {
+    chrono::steady_clock sc;
+    auto start = sc.now();
+    auto end = sc.now();
+    auto time_span = static_cast<chrono::duration<double>>(end - start);
     for(int i = 0; i< M; ++i)
     {
         graph_gen(&capacity, &n);
         cout << "\ngraph size:" << n  << endl;
+        start = sc.now();     // start timer
         int maxflow = max_flow(0, n-1);
-        cout << "sequential maxflow:" << maxflow  << endl;
+        end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
+        time_span = static_cast<chrono::duration<double>>(end - start);
+        cout << "sequential maxflow:" << maxflow  << " time:" << time_span.count()<< endl;
+        start = sc.now();
         maxflow = goldberg(capacity, n);
-        cout << "matrix maxflow:" << maxflow << endl;
+        end = sc.now();
+        time_span = static_cast<chrono::duration<double>>(end - start);
+        cout << "matrix maxflow:" << maxflow << " time:" << time_span.count()<< endl;
 
     }
     return 0;
