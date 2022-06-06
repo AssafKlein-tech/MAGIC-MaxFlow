@@ -5,6 +5,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
+int M = 20;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -87,13 +88,16 @@ int max_flow(int s, int t)
 
 int main()
 {
-    graph_gen(&capacity, &n);
-    int maxflow = max_flow(0, n-1);
-    cout << maxflow << endl;
-    // string s = to_string(maxflow);
-    // printf("%s", s);
-    maxflow = goldberg(capacity, n);
-    cout << maxflow << endl;
+    for(int i = 0; i< M; ++i)
+    {
+        graph_gen(&capacity, &n);
+        cout << "\ngraph size:" << n  << endl;
+        int maxflow = max_flow(0, n-1);
+        cout << "sequential maxflow:" << maxflow  << endl;
+        maxflow = goldberg(capacity, n);
+        cout << "matrix maxflow:" << maxflow << endl;
+
+    }
     return 0;
 }
 
