@@ -57,6 +57,26 @@ void print_Cf()
         cout << endl;
     }
 }
+void print_C()
+{
+    cout<< "C:" << endl;
+    for(size_t i = 0; i < C.size(); i++)
+    {
+        for(size_t j = 0; j < C[i].size(); j++)
+            cout << (C[i][j]) << " ";
+        cout << endl;
+    }
+}
+void print_F()
+{
+    cout<< "F:" << endl;
+    for(size_t i = 0; i < F.size(); i++)
+    {
+        for(size_t j = 0; j < F[i].size(); j++)
+            cout << (F[i][j]) << " ";
+        cout << endl;
+    }
+}
 
 void initializations(int s, graph capacity, int num_vertices)
 {
@@ -212,6 +232,7 @@ void update_excess()
 
 int goldberg(graph capacity, int num_vertices)
 {
+    print_C();
     initializations(0, capacity, num_vertices);
     pre_flow();
 
@@ -223,6 +244,7 @@ int goldberg(graph capacity, int num_vertices)
         relabel();
         update_excess();
     }
+    print_F();
     return e[N-1];
 }
 
