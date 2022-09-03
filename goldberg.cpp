@@ -59,7 +59,8 @@ void print_Cf()
 }
 void print_C()
 {
-    cout<< "C:" << endl;
+    cout<< "C:" << C.size() << endl;
+
     for(size_t i = 0; i < C.size(); i++)
     {
         for(size_t j = 0; j < C[i].size(); j++)
@@ -73,7 +74,12 @@ void print_F()
     for(size_t i = 0; i < F.size(); i++)
     {
         for(size_t j = 0; j < F[i].size(); j++)
-            cout << (F[i][j]) << " ";
+        {
+            if (F[i][j] > 0)
+                cout << (F[i][j]) << " ";
+            else  
+                cout << '0' << " ";  
+        }   
         cout << endl;
     }
 }
@@ -111,8 +117,8 @@ void pre_flow()
         e = temp_preflow;
     }
     e[0] = -sum;
-    // print_e();
-    // print_Cf();
+    //print_e();
+    //print_Cf();
 }
 
 
@@ -121,8 +127,6 @@ bool check_excess()
     // Returns true if theres at least one non-zero value in excess, excluding {s,t}
     for (int i = 1; i < N - 1; i++)
     {
-
-
         if (e[i] != 0)
             return true;
     }
@@ -162,18 +166,6 @@ void calc_outflow()
             e[i] -= sigma[i][j];
         }
     }
-    // // Some prints
-    // cout<< "Cf_temp:" << endl;
-    // for(size_t i = 0; i < Cf_temp.size(); i++)
-    // {
-    //     for(size_t j = 0; j < Cf_temp[i].size(); j++)
-    //         cout << (Cf_temp[i][j]) << " ";
-    //     cout << endl;
-    // }
-    // print_e();
-    // print_sigma();
-    // print_Cf();
-    // print_D();
 }   
 
 void push_flow()
@@ -208,7 +200,7 @@ void relabel()
             new_D[i][j] += D[i][j];
             min = (min <= new_D[i][j]) ? min : new_D[i][j];
         }
-        d[i] = min + 1;
+        d[i] = min + 1; 
     }
 
     for (int i = 0; i < N; i++)
@@ -233,19 +225,26 @@ void update_excess()
 
 int goldberg(graph capacity, int num_vertices)
 {
-    print_C();
     initializations(0, capacity, num_vertices);
-    //int i = 0;
+    //print_C();
+    pre_flow();
+    //print_F();
+    int i = 0;
     while(check_excess())
     {
+
         sigma.assign(N, vi(N, 0));
         calc_outflow();
         push_flow();
+       // print_Cf();
+        //print_F();
         relabel();
         update_excess();
-        //i++;
+        i++;
     }
-    print_F();
+    //print_Cf();
+    //print_F();
+    cout << "number of iterations: " << i << endl;
     return e[N-1];
 }
 

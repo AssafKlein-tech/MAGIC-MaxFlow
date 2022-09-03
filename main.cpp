@@ -6,7 +6,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 100;
+int M = 10;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -92,6 +92,8 @@ int main()
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
+    double serial_time;
+    double parallel_time;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     for(int i = 0; i< M; ++i)
     {
@@ -101,12 +103,15 @@ int main()
         int maxflow = max_flow(0, n-1);
         end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
         time_span = static_cast<chrono::duration<double>>(end - start);
-        //cout << "sequential maxflow:" << maxflow  << " time:" << time_span.count()<< endl;
+        serial_time = time_span.count();
+        cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
         start = sc.now();
         maxflow = goldberg(capacity, n);
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
-        cout << "matrix maxflow:" << maxflow << " time:" << time_span.count()<< endl;
+        parallel_time = time_span.count();
+        cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+        cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
 
     }
     return 0;

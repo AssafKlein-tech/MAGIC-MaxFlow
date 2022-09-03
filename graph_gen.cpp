@@ -11,10 +11,10 @@ using namespace std;
 
 typedef vector<int> vi;
 typedef vector<vi> graph;
-const int min_vert = 4;
-const int max_vert = 7;
+const int min_vert = 1000;
+const int max_vert = 10000;
 const int limit_capacity = 10000;
-const int graph_density_percent = 60;
+const int graph_density_percent = 50;
 const int min_percent = 1;
 const int max_percent = 100;
 
