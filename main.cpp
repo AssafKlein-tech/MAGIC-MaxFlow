@@ -6,7 +6,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 20;
+int M = 100;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -101,7 +101,7 @@ int main()
         int maxflow = max_flow(0, n-1);
         end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
         time_span = static_cast<chrono::duration<double>>(end - start);
-        cout << "sequential maxflow:" << maxflow  << " time:" << time_span.count()<< endl;
+        //cout << "sequential maxflow:" << maxflow  << " time:" << time_span.count()<< endl;
         start = sc.now();
         maxflow = goldberg(capacity, n);
         end = sc.now();

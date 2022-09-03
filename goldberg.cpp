@@ -83,13 +83,14 @@ void pre_flow()
     for (int i = 0; i < N; i++)
     {
         D[i][0] = d[0];
-
+        F[0][i] = temp_preflow[i];
+        F[i][0] = -temp_preflow[i];
         Cf[i][0] = temp_preflow[i];
         sum += temp_preflow[i];
 
         e = temp_preflow;
-        e[0] = -sum;
     }
+    e[0] = -sum;
     // print_e();
     // print_Cf();
 }
@@ -213,8 +214,7 @@ void update_excess()
 int goldberg(graph capacity, int num_vertices)
 {
     initializations(0, capacity, num_vertices);
-    pre_flow();
-
+    //int i = 0;
     while(check_excess())
     {
         sigma.assign(N, vi(N, 0));
@@ -222,7 +222,9 @@ int goldberg(graph capacity, int num_vertices)
         push_flow();
         relabel();
         update_excess();
+        //i++;
     }
+    //printf("number of pulses %d\n", i);
     return e[N-1];
 }
 
