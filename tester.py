@@ -97,8 +97,31 @@ def run_HPF(C, N, num_vertices, max_flow_capacity, write_file_path, results_path
     write_input_file(data, write_file_path)
     print("Done converting and writing the input file, running script")
     os.system(f"{script_path} {write_file_path} {results_path}")
-    print("------------------ result proccessing")
-    read_result_file(C, N, results_path)
+    #print("------------------ result proccessing")
+    #read_result_file(C, N, results_path)
+
+def run_grid_Cut():
+    return
+
+def main():
+    
+    graph_size = MAX_SIZE
+
+    for i in range(NUMBER_OF_ITERATIONS):
+        graph_size += i * MAX_SIZE
+        for j in range(GRAPHS_PER_ITERATION):
+            # general graphs 
+            C, N, num_arcs = gen_graph(graph_size, graph_size + SIZE_RANGE, MAX_FLOW_CAPACITY, DENSITY_PERCENT)
+            #print(C)
+            run_HPF(C, N, num_arcs, MAX_FLOW_CAPACITY, "./pseudo_max/ido.txt", "./results.txt", "/home/idoassaf/MAGIC-MaxFlow/pseudo_max/bin/pseudo_lifo")
+
+            #grid graphs
+            C, N, num_arcs = gen_grid_graph(graph_size, graph_size + SIZE_RANGE, MAX_FLOW_CAPACITY)
+            
+
+
+if __name__ == "__main__":
+    main()
 
 
 
