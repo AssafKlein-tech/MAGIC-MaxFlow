@@ -37,4 +37,8 @@
 *.slo
 *.txt
 
+./Benchmarks/*
 Benchmarks/*
+
+*.zip
+*.tbz2
