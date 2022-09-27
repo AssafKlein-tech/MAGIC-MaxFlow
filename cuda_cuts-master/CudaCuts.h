@@ -57,7 +57,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
  * **************************************************************/
 
 #define CONTROL_M 40
-
+#define NUMBER_OF_RUN 10
 
 class CudaCuts {
 public:

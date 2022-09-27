@@ -11,8 +11,8 @@ using namespace std;
 
 typedef vector<int> vi;
 typedef vector<vi> graph;
-const int min_vert = 1000;
-const int max_vert = 2000;
+const int min_vert = 3;
+const int max_vert = 4;
 const int limit_capacity = 10000;
 const int graph_density_percent = 50;
 const int min_percent = 1;
@@ -29,7 +29,31 @@ int random_int(int first, int last)
 }
 
 
-
+void grid_graph_gen(graph* capacity, int *width, int *height, int *num_vertices)
+{
+    int W = random_int(min_vert, max_vert);
+    int H = random_int(min_vert, max_vert);
+    *width = W;
+    *height = H;
+    int N = (W) * (H) + 2;
+    *num_vertices = N;
+    int x1, y1, x2, y2;
+    (*capacity).assign(N, vi(N, 0));
+    for (int i = 0; i < N; i++) for (int j = 0; j < N; j++)
+    {
+        x1 = (i - 2) % W;
+        x2 = (j - 2) % W;
+        y1 = (i - 2) / W;
+        y2 = (j - 2) / W;
+        if(i == 0 || j == 1)
+            (*capacity)[i][j] = random_int(1, limit_capacity);        
+        else if (((y1 == y2) && (abs(x1 - x2) == 1)) ||
+            ((x1 == x2) && (abs(y1 - y2) == 1)))
+        {        
+            (*capacity)[i][j] = random_int(1, limit_capacity);
+        }
+    }
+}
 
 void graph_gen(graph* capacity, int *num_vertices)
 {

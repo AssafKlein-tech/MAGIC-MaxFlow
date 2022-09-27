@@ -1,4 +1,5 @@
 #include "goldberg.cpp"
+#include "goldberg_grid.cpp"
 #include "graph_gen.cpp"
 #include <chrono>
 // vector<vector<int>> capacity, flow;
@@ -35,12 +36,12 @@ void push(int u, int v)
 
 void relabel(int u)
 {
-    int d = inf;
+    int d = grid::INF;
     for (int i = 0; i < n; i++) {
         if (capacity[u][i] - flow[u][i] > 0)
             d = min(d, height[i]);
     }
-    if (d < inf)
+    if (d < grid::INF)
         height[u] = d + 1;
 }
 
@@ -66,7 +67,7 @@ int max_flow(int s, int t)
     height[s] = n;
     flow.assign(n, vector<int>(n, 0));
     excess.assign(n, 0);
-    excess[s] = inf;
+    excess[s] = grid::INF;
     for (int i = 0; i < n; i++) {
         if (i != s)
             push(s, i);
@@ -97,7 +98,9 @@ int main()
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     for(int i = 0; i< M; ++i)
     {
-        graph_gen(&capacity, &n);
+        // graph_gen(&capacity, &n);
+        int width, height;
+        grid_graph_gen(&capacity, &width, &height, &n);
         cout << "\ngraph size:" << n  << endl;
         start = sc.now();     // start timer
         int maxflow = max_flow(0, n-1);
@@ -111,6 +114,12 @@ int main()
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+        start = sc.now();
+        maxflow = grid::goldberg_grid(capacity, width, height);
+        end = sc.now();
+        time_span = static_cast<chrono::duration<double>>(end - start);
+        parallel_time = time_span.count();
+        cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
 
     }

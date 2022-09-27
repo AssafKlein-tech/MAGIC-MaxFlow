@@ -121,7 +121,7 @@ void pre_flow()
     //print_Cf();
 }
 
-
+//e(s) + e(t) = 0
 bool check_excess()
 {
     // Returns true if theres at least one non-zero value in excess, excluding {s,t}
@@ -249,3 +249,43 @@ int goldberg(graph capacity, int num_vertices)
 }
 
 #endif
+
+
+
+
+// struct Node{
+//     uint8_t capacities[4];
+//     uint8_t flow_out [4];
+//     uint8_t neighbor_heights[4];
+// }
+
+// void main(){
+
+
+//     vector<vector<Node>> nodes = ...
+
+//     // Initialization 
+//     ...
+
+
+//     // Pre flow
+
+//     while(true){
+
+
+//         for(int i = 0; i < W; i++) for(int j = 0; j < H; j++)){
+//             Node node = nodes[i][j];
+//             // Some local operation in the node (optionally with neighbours)
+//             node.height = max(node.neighbor_heights[0], [1], ...)
+//             node.height = node_up.
+//         }
+
+
+
+//         if(...) break;
+//     }
+
+//     // Generate output by reading from each Node, save as segmentation
+
+
+// }
