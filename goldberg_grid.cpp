@@ -22,44 +22,152 @@ namespace grid{
     const int FROM_SINK = 7;
     const int SIZE = 8;
 
+
     typedef vector<int> vi;
     typedef vector<vi> graph;
 
     // Declarations
     // graph residual, D, C, sigma, F;
-    vi d, e;
+    //graph d, e;
+    int E_S, E_T, D_S, D_T;
     int N, W, H, S, T;
     struct Node;
     vector<vector<Node>> nodes;
     struct Node{
-
-        int capacities [SIZE];
+        int e;
+        int d;
         int flow [SIZE];
         int neighbor_heights [SIZE];
         int residual_capacities [SIZE];
         int sigma [SIZE];
+        int Cf_temp [SIZE];
+        int Cf_sum [SIZE];
         
-        Node (int caps[SIZE],
+        Node (
             int flow_arg[SIZE],
             int d[SIZE],
             int residual[SIZE],
             int sig[SIZE]){
+                e = 0;
+                d = 0;
                 for (int i = 0; i < SIZE; i++)
                 {
-                    capacities[i] = caps[i];
                     flow[i] = flow_arg[i];
                     neighbor_heights[i] = d[i];
                     residual_capacities[i] = residual[i];
                     sigma[i] = sig[i];
+                    Cf_temp[i] = 0;
+                    Cf_sum[i] = 0;
                 }
             }
-    };
 
-    void initializations(graph capacity)
+        void calc_cfTemp()
+        {
+            for (int i = 0; i < SIZE; i++)
+            {
+                Cf_temp[i] = (d - neighbor_heights[i] == 1) ? residual_capacities[i] : 0;
+            }
+        }
+
+        void sf_sum()
+        { 
+            int sum = 0;
+            for (int i = 0; i < SIZE; i++)
+            {
+                Cf_sum[i] = sum;
+                sum += Cf_temp[i];
+            }
+        }
+
+        void calc_sigma()
+        {
+            for (int i = 0; i < SIZE; i++)
+            {
+                sigma[i] = ((e- Cf_sum[i]) < Cf_temp[i]) ? (e - Cf_sum[i]) : Cf_temp[i];
+                sigma[i] = (sigma[i] > 0) ? sigma [i] : 0;
+                e -= sigma[i];
+            }
+        }
+
+        void calc_out_flows()
+        {
+            calc_cfTemp();
+            sf_sum();
+            calc_sigma();
+        }
+    };
+/*
+    struct out_flow{
+        int Cf_temp [SIZE];
+        int Cf_sum [SIZE];
+
+        
+        out_flow ()
+        {
+            for (int i = 0; i < SIZE; i++)
+            {
+                Cf_temp[i] = 0;
+                Cf_sum[i] = 0;
+            }
+        }
+
+        void calc_cfTemp(int *hights, int * cf, int d)
+        {
+            for (int i = 0; i < SIZE; i++)
+            {
+                Cf_temp[i] = (d - hights[i] == 1) ? cf[i] : 0;
+            }
+        }
+
+        void sf_sum()
+        { 
+            int sum = 0;
+            for (int i = 0; i < SIZE; i++)
+            {
+                Cf_sum[i] = sum;
+                sum += Cf_temp[i];
+            }
+        }
+
+        int * calc_sigma(int e)
+        {
+            int sigma[SIZE];
+            for (int i = 0; i < SIZE; i++)
+            {
+                sigma[i] = ((e- Cf_sum[i]) < Cf_temp[i]) ? (e - Cf_sum[i]) : Cf_temp[i];
+                sigma[i] = (sigma[i] > 0) ? sigma [i] : 0;
+            }
+            return sigma;
+        }
+
+        int * calc_out_flows(int *hights, int * cf, int d, int e)
+        {
+            calc_cfTemp(hights, cf,d);
+            sf_sum();
+            return calc_sigma(e);
+        }
+    };*/
+
+
+    //vector<vector<out_flow>> out_flow_matrix;
+
+
+    void print_f()
     {
-        N = W * H;
-        S = N;
-        T = N + 1;
+
+    }
+
+    void print_e()
+    {
+        /*
+        std::cout << "e_vector:" << std::endl;
+        for(size_t i = 0; i < e.size(); i++)
+            std::cout << (e[i]) << std::endl;
+        */
+    }
+
+    void initialize_nodes(graph capacity)
+    {
         vector<Node> temp_v;
         int zeros[SIZE];
         for (int i = 0; i < SIZE; i++)
@@ -67,24 +175,23 @@ namespace grid{
         int cap[SIZE];
         for(int i = 0; i < H; i++)
         {
-
             for(int j = 0; j < W; j++)
             {
                 int index = i * W + j;
-                cap[TO_SOURCE] = capacity[i * W + j][0];
-                cap[FROM_SOURCE] = capacity[0][i * W + j];
-                cap[TO_SINK] = capacity[i * W + j][N + 1];
-                cap[FROM_SINK] = capacity[N + 1][i * W + j];
+                cap[TO_SOURCE] = capacity[index][0];
+                cap[FROM_SOURCE] = capacity[0][index];
+                cap[TO_SINK] = capacity[index][N + 1];
+                cap[FROM_SINK] = capacity[N + 1][index];
                 // Right vertex
-                cap[RIGHT] = (i - 1 < W) ? capacity[i + 1][j] : 0;
+                cap[RIGHT] = (j - 1 < W) ? capacity[index][index + 1] : 0;
                 // Down vertex
-                cap[DOWN] = (j > 0) ? capacity[i][j-1] : 0;
+                cap[DOWN] = (i > 0) ? capacity[index][index - W] : 0;
                 // Left vertex
-                cap[LEFT] = (i > 0) ? capacity[i - 1][j] : 0;
+                cap[LEFT] = (j > 0) ? capacity[index][index - 1] : 0;
                 // Upwards vertex
-                cap[UP] = (j - 1 < H) ? capacity[i][j + 1] : 0;            
+                cap[UP] = (i - 1 < H) ? capacity[index][index + W] : 0;            
 
-                temp_v.push_back(Node(cap,
+                temp_v.push_back(Node(
                                     zeros,
                                     zeros,
                                     cap,
@@ -92,151 +199,136 @@ namespace grid{
             }
             nodes.push_back(temp_v);
             temp_v.clear();
-
         }
-        e.assign(N + 2, 0);
-        d.assign(N + 2, 0);
-        e[S] = INF;
+    }
+
+   /* void initialize_out_flow_matrix()
+    {
+        vector<out_flow> temp_v;
+        for(int j = 0; j < W; j++)
+        {
+            temp_v.push_back(out_flow());
+        }
+        for(int i = 0; i < H; i++)
+        {
+            out_flow_matrix.push_back(temp_v);
+            temp_v.clear();
+        }
+    }*/
+
+    /*
+    void initialize_graphs()
+    {
+        e.assign(H , vi(W,0));
+        d.assign(H , vi(W,0));
+    }
+    */
+
+
+    void initializations(graph capacity, int width, int height)
+    {
+        W = width;
+        H = height;
+        N = W * H;
+        S = N;
+        T = N + 1;
+        initialize_nodes(capacity);
+        //initialize_graphs();
     }
 
     void pre_flow()
     {
-        d[S] = N;
+        D_S = N;
+        D_T = 0;
+        E_T = 0;
+
         int sum = 0;
-        int temp;
-        // std::cout << W << ", H=" << H << std::endl;
-        for(int i = 0; i < W; i++) for(int j = 0; j < H; j++)
+        int flow;
+
+        for(int i = 0; i < H; i++)
         {
-            Node node = nodes[i][j];
-            temp = node.residual_capacities[FROM_SOURCE];
-            node.residual_capacities[FROM_SOURCE] = 0;
-            node.flow[FROM_SOURCE] = temp;
-            node.flow[TO_SOURCE] = -temp;
-            node.residual_capacities[TO_SOURCE] = temp;
-            node.neighbor_heights[TO_SOURCE] = d[S];
-            sum += temp;
-            e[i * H + j] = temp;
-            // std::cout << temp << std::endl;
+            for(int j = 0; j < W; j++)
+            {
+                flow = nodes[i][j].residual_capacities[FROM_SOURCE];
+                
+                //updates the flow matrix
+                nodes[i][j].flow[FROM_SOURCE] = flow;
+
+                //updates the residual_capacities
+                nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
+                nodes[i][j].residual_capacities[TO_SOURCE] = flow;
+
+                // the excess for each node
+                nodes[i][j].e = flow;
+                sum += flow;
+
+                // std::cout << temp << std::endl;
+            }
         }
-        e[S] = -sum;
+        E_S= -sum;
     }
 
     bool check_excess()
     {
         // Returns true if theres at least one non-zero
         // value in excess, excluding {s,t}
-        for (int i = 0; i < N; i++)
+        /*for (int i = 0; i < N; i++)
         {
             if (e[i] != 0)
                 return true;
         }
-        return false;
+        return false;*/
+        return !(E_S + E_T == 0);
     }
 
     void calc_outflow()
     {
 
-        graph D_binary, residual_temp, residual_sum;
-        D_binary.assign(N, vi(SIZE, 0));
-        residual_temp.assign(N, vi(SIZE, 0));
-        residual_sum.assign(N, vi(SIZE, 0));
-        int height, width;
-
-        // For the other vertices
-        for(int i = 0; i < N; i++) for(int j = 0; j < SIZE; j++)
+        for(int i = 0; i < H; i++)
         {
-            Node node = nodes[i / W][i % W]; //[height][width]
-            if (j == FROM_SOURCE)
+            for(int j = 0; j < W; j++)
             {
-                D_binary[i][j] = ((d[S] - node.neighbor_heights[j] ) == 1) ? 1 : 0;
-            }
-            else if (j == FROM_SINK)
-            {
-                D_binary[i][j] = ((d[T] - node.neighbor_heights[j] ) == 1) ? 1 : 0;
-            }
-            else
-            {
-            D_binary[i][j] = ((d[i] - node.neighbor_heights[j] ) == 1) ? 1 : 0;
-            }
-            residual_temp[i][j] = D_binary[i][j] * node.residual_capacities[j];
-        }
+                nodes[i][j].calc_out_flows();
 
-        for (int i = 0; i < N; i++)
-        {
-            height = i / W;
-            width = i % W;
-            int sum = 0;
-            for (int j = SIZE-1; j >= 0; j--)
-            {
-                Node node = nodes[height][width];
-                // prefix sum
-                residual_sum[i][j] = sum;
-                sum += residual_temp[i][j];
-                // Take the minimum
-                if (j == FROM_SOURCE)
-                {
-                    node.sigma[j] = std::max(
-                    std::min((e[S] - residual_sum[i][j]), residual_temp[i][j]), 0);
-                    // node.sigma[j] = ((e[S] - residual_sum[i][j]) < residual_temp[i][j])
-                    // ? (e[S] - residual_sum[i][j]) : (residual_temp[i][j]);
-                    // // node.sigma[j] = std::max(node.sigma[j], 0);
-                    // node.sigma[j] = (node.sigma[j] > 0) ? node.sigma[j] : 0;
-                    // Calc the excess leftover
-                    e[S] -= node.sigma[j];
-                }
-                if (j == FROM_SINK)
-                {
-                    node.sigma[j] = std::max(
-                    std::min((e[T] - residual_sum[i][j]), residual_temp[i][j]), 0);
-                    // node.sigma[j] = ((e[T] - residual_sum[i][j]) < residual_temp[i][j])
-                    // ? (e[T] - residual_sum[i][j]) : (residual_temp[i][j]);
-                    // node.sigma[j] = (node.sigma[j] > 0) ? node.sigma[j] : 0;
-                    // Calc the excess leftover
-                    e[T] -= node.sigma[j];
-                }   
-                else
-                {
-                    node.sigma[j] = std::max(
-                    std::min((e[i] - residual_sum[i][j]), residual_temp[i][j]), 0);
-                    // node.sigma[j] = ((e[i] - residual_sum[i][j]) < residual_temp[i][j])
-                    // ? (e[i] - residual_sum[i][j]) : (residual_temp[i][j]);
-                    // node.sigma[j] = (node.sigma[j] > 0) ? node.sigma[j] : 0;
-                    // Calc the excess leftover
-                    e[i] -= node.sigma[j];
-                }         
             }
         }
     }   
 
     void push_flow()
     {
-        int height, width;
-        for(int i = 0; i < N; i++) for(int j = 0; j < SIZE; j++)
+        for(int i = 0; i < H; i++)
         {
-            height = i / W;
-            width = i % W;
-            Node node = nodes[height][width]; //[height][width]
-            node.flow[j] += node.sigma[j];
-            node.residual_capacities[j] -= node.sigma[j];
-            // Transposed operations
-            // Flow
-            node.flow[RIGHT] = (width < W - 1)
-            ? nodes[height][width + 1].flow[LEFT] : 0;
-            node.flow[DOWN] = (height > 0)
-            ? nodes[height - 1][width].flow[UP] : 0;        
-            node.flow[LEFT] = (width > 0)
-            ? nodes[height][width - 1].flow[RIGHT] : 0; 
-            node.flow[UP] = (height < H - 1)
-            ? nodes[height + 1][width].flow[DOWN] : 0;
-            // Residual capacities
-            node.residual_capacities[RIGHT] = (width < W - 1)
-            ? nodes[height][width + 1].residual_capacities[LEFT] : 0;
-            node.residual_capacities[DOWN] = (height > 0)
-            ? nodes[height - 1][width].residual_capacities[UP] : 0;        
-            node.residual_capacities[LEFT] = (width > 0)
-            ? nodes[height][width - 1].residual_capacities[RIGHT] : 0; 
-            node.residual_capacities[UP] = (height < H - 1)
-            ? nodes[height + 1][width].residual_capacities[DOWN] : 0;
+            for(int j = 0; j < W; j++)
+            {
+                Node *node = &(nodes[i][j]);
+                //update out flow
+                for (int k = RIGHT ; k <= SIZE; k++) 
+                {
+                    node->flow[k] += node->sigma[k];
+                    node->residual_capacities[k] -= node->sigma[k];
+                }
+
+
+                // update in flow
+                node->flow[RIGHT] -= (j < W - 1)
+                ? nodes[i][j + 1].sigma[LEFT] : 0;
+                node->flow[DOWN] -= (i > 0)
+                ? nodes[i - 1][j].sigma[UP] : 0;        
+                node->flow[LEFT] -= (j > 0)
+                ? nodes[i][j- 1].sigma[RIGHT] : 0; 
+                node->flow[UP] -= (i < H - 1)
+                ? nodes[i + 1][j].sigma[DOWN] : 0;
+
+                // Residual capacities
+                node->residual_capacities[RIGHT] += (j < W - 1)
+                ? nodes[i][j+ 1].sigma[LEFT] : 0;
+                node->residual_capacities[DOWN] += (i > 0)
+                ? nodes[i - 1][j].sigma[UP] : 0;        
+                node->residual_capacities[LEFT] += (j> 0)
+                ? nodes[i][j- 1].sigma[RIGHT] : 0; 
+                node->residual_capacities[UP] += (i < H - 1)
+                ? nodes[i + 1][j].sigma[DOWN] : 0;
+            }
         }
     }
 
@@ -249,11 +341,11 @@ namespace grid{
         {
             for(int j = 0; j < SIZE; j++)
             {
-                Node node = nodes[i / W][i % W]; //[height][width]
+                Node *node = &(nodes[i / W][i % W]); //[height][width]
                 new_D[i][j] = 2 * N;
-                residual_temp[i][j] = (node.residual_capacities[j] == 0) ? 1 : 0;
+                residual_temp[i][j] = (node->residual_capacities[j] == 0) ? 1 : 0;
                 new_D[i][j] *= residual_temp[i][j];
-                new_D[i][j] += node.neighbor_heights[j];
+                new_D[i][j] += node->neighbor_heights[j];
                 min = std::min(min, new_D[i][j]);
             } 
             d[i] = min + 1; 
@@ -273,16 +365,30 @@ namespace grid{
 
     void update_excess()
     {
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
+                Node *node = &(nodes[i][j]);
+                node->e
+            }
+        }
+
         for (int i = 0; i < N; i++) for (int j = 0; j < SIZE; j++)
         {
-            Node node = nodes[i / W][i % W]; //[height][width]
+            Node *node = &(nodes[i / W][i % W]); //[height][width]
 
-            if (j == FROM_SOURCE)
-                e[S] += node.sigma[j];
-            else if (j == FROM_SINK)
-                e[T] += node.sigma[j];
-            else    
-                e[i] += node.sigma[j];
+            if (j == FROM_SOURCE){
+                // std::cout << "Here 1" << node->sigma[j] << std::endl; 
+                e[S] += node->sigma[j];
+                }
+            else if (j == FROM_SINK){
+                // std::cout << "Here 2" << node->sigma[j] << std::endl;
+                e[T] += node->sigma[j];}
+            else    {
+                // std::cout << "Here 3" << node->sigma[j] << std::endl;
+                e[i] += node->sigma[j];
+            }
         }
     }
 
@@ -295,20 +401,22 @@ namespace grid{
     }
 
     int goldberg_grid(graph capacity, int width, int height){
-        W = width;
-        H = height;
+        
         // Initialization 
-        initializations(capacity);
+        initializations(capacity, width, height);
         pre_flow();
         int i = 0;
         while(check_excess())
         {
+            // std::cout << "Here " << i << std::endl;
+            // std::cout << (e[S] + e[T]) << std::endl;
             reset_sigma();
             calc_outflow();
             push_flow();
             relabel();
             update_excess();
             i++;
+            print_e();
         }
         cout << "number of iterations: " << i << endl;
         return e[T];
