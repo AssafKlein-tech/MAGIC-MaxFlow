@@ -308,7 +308,6 @@ namespace grid{
                     node->residual_capacities[k] -= node->sigma[k];
                 }
 
-
                 // update in flow
                 node->flow[RIGHT] -= (j < W - 1)
                 ? nodes[i][j + 1].sigma[LEFT] : 0;
@@ -331,6 +330,7 @@ namespace grid{
             }
         }
     }
+    
 
     void relabel()
     {

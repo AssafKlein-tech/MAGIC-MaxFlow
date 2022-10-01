@@ -27,9 +27,11 @@ using namespace std;
 const string DSTPATH = "./algs.csv";
 const string SRCFILES = "./data/";
 
-CudaCuts cuts;
+const int REPEATS = 20;
 
-void loadFile(string filepath);
+CudaCuts cuts[REPEATS];
+
+void loadFile(string filepath, int idx);
 int writePGM(char *filename);
 void writeTime(string path, float time, int size, char*type);
 
@@ -39,131 +41,138 @@ int main(int argc, char ** argv)
 	{
 		std::cout << " missing arguments" << std::endl;
 	}
-
+	int initCheck [REPEATS];
+	int dataCheck, smoothCheck, hcueCheck, vcueCheck, graphCheck, resultCheck;
 	string path = SRCFILES + argv[1] + ".txt";
-	loadFile(path);
-
-	int initCheck = cuts.cudaCutsInit(cuts.width, cuts.height, cuts.num_Labels);
-
-	printf("Compute Capability %d\n", initCheck);
-
-	if (initCheck > 0)
+	for(int i = 0; i < REPEATS ; i++)
 	{
-		printf("The grid is initialized successfully\n");
+		loadFile(path, i);
+
+
+		initCheck[i] = cuts[i].cudaCutsInit(cuts[i].width, cuts[i].height, cuts[i].num_Labels);
+
+		printf("Compute Capability %d\n", initCheck);
+
+		if (initCheck[i] > 0)
+		{
+			printf("The grid is initialized successfully\n");
+		}
+		else
+		if (initCheck[i] == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+
+
+		dataCheck = cuts[i].cudaCutsSetupDataTerm();
+
+		if (dataCheck == 0)
+		{
+			printf("The dataterm is set properly\n");
+
+		}
+		else
+		if (dataCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+
+		smoothCheck = cuts[i].cudaCutsSetupSmoothTerm();
+
+
+		if (smoothCheck == 0)
+		{
+			printf("The smoothnessterm is set properly\n");
+		}
+		else
+		if (smoothCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+
+		hcueCheck = cuts[i].cudaCutsSetupHCue();
+
+		if (hcueCheck == 0)
+		{
+			printf("The HCue is set properly\n");
+		}
+		else
+		if (hcueCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+		vcueCheck = cuts[i].cudaCutsSetupVCue();
+
+
+		if (vcueCheck == 0)
+		{
+			printf("The VCue is set properly\n");
+		}
+		else
+		if (vcueCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+
+		graphCheck = cuts[i].cudaCutsSetupGraph();
+
+		if (graphCheck == 0)
+		{
+			printf("The graph is constructed successfully\n");
+		}
+		else
+		if (graphCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
 	}
-	else
-	if (initCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-	int dataCheck = cuts.cudaCutsSetupDataTerm();
-
-	if (dataCheck == 0)
-	{
-		printf("The dataterm is set properly\n");
-
-	}
-	else
-	if (dataCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-
-	int smoothCheck = cuts.cudaCutsSetupSmoothTerm();
-
-
-	if (smoothCheck == 0)
-	{
-		printf("The smoothnessterm is set properly\n");
-	}
-	else
-	if (smoothCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-
-	int hcueCheck = cuts.cudaCutsSetupHCue();
-
-	if (hcueCheck == 0)
-	{
-		printf("The HCue is set properly\n");
-	}
-	else
-	if (hcueCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-	int vcueCheck = cuts.cudaCutsSetupVCue();
-
-
-	if (vcueCheck == 0)
-	{
-		printf("The VCue is set properly\n");
-	}
-	else
-	if (vcueCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-
-	int graphCheck = cuts.cudaCutsSetupGraph();
-
-	if (graphCheck == 0)
-	{
-		printf("The graph is constructed successfully\n");
-	}
-	else
-	if (graphCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
- 
-    float time;
+    float time[REPEATS];
 	int optimizeCheck = -1;
-	if (initCheck == 1)
+	for (int i = 0; i < REPEATS; i++)
 	{
-		//CudaCuts involving atomic operations are called
-		//optimizeCheck = cuts.cudaCutsNonAtomicOptimize();
-		//CudaCuts involving stochastic operations are called
-		optimizeCheck = cuts.cudaCutsStochasticOptimize(&time);
+		if (initCheck[i] == 1)
+		{
+			//CudaCuts involving atomic operations are called
+			//optimizeCheck = cuts.cudaCutsNonAtomicOptimize();
+			//CudaCuts involving stochastic operations are called
+			optimizeCheck = cuts[i].cudaCutsStochasticOptimize(&time[i]);
+		}
+
+		if (optimizeCheck == 0)
+		{
+			printf("The algorithm successfully converged\n");
+		}
+		else
+		if (optimizeCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
 	}
 
-	if (optimizeCheck == 0)
+    for ( int i = 0; i < REPEATS; i++)
 	{
-		printf("The algorithm successfully converged\n");
+		resultCheck = cuts[i].cudaCutsGetResult();
+		if (resultCheck == 0)
+		{
+			printf("The pixel labels are successfully stored\n");
+		}
+		else
+		if (resultCheck == -1)
+		{
+			printf("Error: Please check the device present on the system\n");
+		}
+
+		//int max_flow = writePGM("result_sponge/flower_cuda_test.pgm");
+		//printf("yay");
+		writeTime(DSTPATH, time[i], cuts[i].graph_size, argv[1]);
+
+		cuts[i].cudaCutsFreeMem();
 	}
-	else
-	if (optimizeCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-   
-	int resultCheck = cuts.cudaCutsGetResult();
-
- 
-    
-	if (resultCheck == 0)
-	{
-		printf("The pixel labels are successfully stored\n");
-	}
-	else
-	if (resultCheck == -1)
-	{
-		printf("Error: Please check the device present on the system\n");
-	}
-
-    //int max_flow = writePGM("result_sponge/flower_cuda_test.pgm");
-	//printf("yay");
-    writeTime(DSTPATH, time, cuts.graph_size, argv[1]);
-
-	cuts.cudaCutsFreeMem();
-
 	return 0;
 }
 
@@ -175,59 +184,58 @@ void writeTime(string path, float time, int size, char * type)
     outfile.close();
 }
 
-int writePGM(char* filename)
+int writePGM(char* filename, int idx)
 {
-	int** out_pixel_values = (int**)malloc(sizeof(int*)*cuts.height);
+	int** out_pixel_values = (int**)malloc(sizeof(int*)*cuts[idx].height);
 
-	for (int i = 0; i < cuts.height; i++)
+	for (int i = 0; i < cuts[idx].height; i++)
 	{
-		out_pixel_values[i] = (int*)malloc(sizeof(int)* cuts.width);
-		for (int j = 0; j < cuts.width; j++) {
+		out_pixel_values[i] = (int*)malloc(sizeof(int)* cuts[idx].width);
+		for (int j = 0; j < cuts[idx].width; j++) {
 			out_pixel_values[i][j] = 0;
 		}
 	}
-	for (int i = 0; i < cuts.graph_size1; i++)
+	for (int i = 0; i < cuts[idx].graph_size1; i++)
 	{
 
-		int row = i / cuts.width1, col = i % cuts.width1;
+		int row = i / cuts[idx].width1, col = i % cuts[idx].width1;
 
-		if (row >= 0 && col >= 0 && row <= cuts.height - 1 && col <= cuts.width - 1)
-			out_pixel_values[row][col] = cuts.pixelLabel[i] * 255;
+		if (row >= 0 && col >= 0 && row <= cuts[idx].height - 1 && col <= cuts[idx].width - 1)
+			out_pixel_values[row][col] = cuts[idx].pixelLabel[i] * 255;
 	}
 	FILE* fp = fopen(filename, "w");
 
 	fprintf(fp, "%c", 'P');
 	fprintf(fp, "%c", '2');
 	fprintf(fp, "%c", '\n');
-	fprintf(fp, "%d %c %d %c ", cuts.width, ' ', cuts.height, '\n');
+	fprintf(fp, "%d %c %d %c ", cuts[idx].width, ' ', cuts[idx].height, '\n');
 	fprintf(fp, "%d %c", 255, '\n');
 
-	for (int i = 0; i<cuts.height; i++)
+	for (int i = 0; i<cuts[idx].height; i++)
 	{
-		for (int j = 0; j<cuts.width; j++)
+		for (int j = 0; j<cuts[idx].width; j++)
 		{
 			fprintf(fp, "%d\n", out_pixel_values[i][j]);
 		}
 	}
 	fclose(fp);
-	for (int i = 0; i < cuts.height; i++)
+	for (int i = 0; i < cuts[idx].height; i++)
 		free(out_pixel_values[i]);
 	free(out_pixel_values);
     return 0;
 }
 
 
-void loadFile(string filepath)
+void loadFile(string filepath, int idx)
 {
-	printf("enterd\n");
-	int &width = cuts.width;
-	int &height = cuts.height;
-	int &nLabels = cuts.num_Labels;
+	int &width = cuts[idx].width;
+	int &height = cuts[idx].height;
+	int &nLabels = cuts[idx].num_Labels;
 	
-	int *&dataCostArray = cuts.dataTerm;
-	int *&smoothCostArray = cuts.smoothTerm;
-	int *&hCue = cuts.hCue;
-	int *&vCue = cuts.vCue;
+	int *&dataCostArray = cuts[idx].dataTerm;
+	int *&smoothCostArray = cuts[idx].smoothTerm;
+	int *&hCue = cuts[idx].hCue;
+	int *&vCue = cuts[idx].vCue;
 
 	int s_len = filepath.length();
  
