@@ -7,7 +7,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 10;
+int M = 1;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -101,26 +101,26 @@ int main()
         // graph_gen(&capacity, &n);
         int width, height;
         grid_graph_gen(&capacity, &width, &height, &n);
-        cout << "\ngraph size:" << n  << endl;
-        start = sc.now();     // start timer
-        int maxflow = max_flow(0, n-1);
-        end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
-        time_span = static_cast<chrono::duration<double>>(end - start);
-        serial_time = time_span.count();
-        cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
+        cout << "\ngraph size:" << n << endl;
+        //start = sc.now();     // start timer
+       // int maxflow = max_flow(0, n-1);
+        //end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
+        //time_span = static_cast<chrono::duration<double>>(end - start);
+        //serial_time = time_span.count();
+        //cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
+        //start = sc.now();
+        //maxflow = goldberg(capacity, n);
+        //end = sc.now();
+       // time_span = static_cast<chrono::duration<double>>(end - start);
+        //parallel_time = time_span.count();
+        //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         start = sc.now();
-        maxflow = goldberg(capacity, n);
-        end = sc.now();
-        time_span = static_cast<chrono::duration<double>>(end - start);
-        parallel_time = time_span.count();
-        cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        start = sc.now();
-        maxflow = grid::goldberg_grid(capacity, width, height);
+        int maxflow = grid::goldberg_grid(capacity, width, height);
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
+        //cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
 
     }
     return 0;
