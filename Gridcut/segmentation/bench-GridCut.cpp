@@ -55,18 +55,16 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
   GraphType* graph = new GraphType(w,h); 
 
   grid::initialize_nodes(w,h);
-  //cout << "Initialize nodes" << endl;
 
-  //cout << "w: " << w << ", h: " << h << endl;
   for(int y=0;y<h;y++)
   for(int x=0;x<w;x++)
   {
     const int node = graph->node_id(x,y);
-    //cout << "x: " << x << ", y: " << y << endl;
+   
     graph->set_terminal_cap(node,cap_source[x+y*w],cap_sink[x+y*w]);
 
     grid::set_terminal_cap(x, y, cap_source[x+y*w], cap_sink[x+y*w]);
-    //cout << "terminals fuck" << endl;
+
     
     if (x>0  )
     {
@@ -88,11 +86,9 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
       graph->set_neighbor_cap(node, 0,+1,cap_neighbor[MFI::ARC_EG][x+y*w]);
       grid::set_neighbor_cap(x,y, 0,+1,cap_neighbor[MFI::ARC_EG][x+y*w]);
     } 
-    //cout << "neighbors fuck" << endl;
   }                
   CLOCK_STOP(time_init);
-  //cout << "built graphs" << endl;
-
+ 
   CLOCK_START();
   graph->compute_maxflow();
   CLOCK_STOP(time_maxflow_grid);
@@ -108,7 +104,7 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
   *out_maxflow = graph->get_flow();
 
   if (goldberg_maxflow != *out_maxflow)
-     std::cout << "Error on computing max flow" << std::endl;
+     std::cout << "Error on computing max flow: Grids - " << *out_maxflow << "Ours: " << goldberg_maxflow << std::endl;
 
   for(int y=0;y<h;y++)
   for(int x=0;x<w;x++)

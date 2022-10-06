@@ -212,70 +212,56 @@ namespace grid{
 
     void set_terminal_cap(int idxX, int idxY, int cap_source, int cap_sink)
     {
-        nodes[idxX][idxY].residual_capacities[FROM_SOURCE] = cap_source;
-        nodes[idxX][idxY].residual_capacities[FROM_SINK] = cap_sink;
+        nodes[idxY][idxX].residual_capacities[FROM_SOURCE] = cap_source;
+        nodes[idxY][idxX].residual_capacities[TO_SINK] = cap_sink;
     }
 
-    void set_terminal_cap(int idxX, int idxY, int offset_x, int offset_y, int cap)
+    void set_neighbor_cap(int idxX, int idxY, int offset_x, int offset_y, int cap)
     {
         if ( offset_x == 1 && offset_y  == 0)
-            nodes[idxX][idxY].residual_capacities[RIGHT] = cap;
+            nodes[idxY][idxX].residual_capacities[RIGHT] = cap;
         else if ( offset_x == 0 && offset_y == -1)
-            nodes[idxX][idxY].residual_capacities[DOWN] = cap;
+            nodes[idxY][idxX].residual_capacities[DOWN] = cap;
         else if ( offset_x == -1 && offset_y == 0)
-            nodes[idxX][idxY].residual_capacities[LEFT] = cap;
+            nodes[idxY][idxX].residual_capacities[LEFT] = cap;
         else if ( offset_x == 0 && offset_y == 1)
-            nodes[idxX][idxY].residual_capacities[UP] = cap;
+            nodes[idxY][idxX].residual_capacities[UP] = cap;
         else
             throw std::invalid_argument( "received non grid offsets" );        
     }
 
 
 
-    void initialize_nodes(graph capacity)
+    void initialize_nodes(int w, int h)
     {
         vector<Node> temp_v;
-        int cap[SIZE];
+        int zero[SIZE];
         nodes.clear();
-        for(int i = 0; i < H; i++)
+        for(int k = 0; k < SIZE; k++)
+            zero[k] = 0;   
+        for(int i = 0; i < h; i++)
         {
-            for(int j = 0; j < W; j++)
-            {
-                int index = i * W + j + 1;
-                cap[TO_SOURCE] = 0;
-                cap[FROM_SOURCE] = capacity[S][index];
-                cap[TO_SINK] = capacity[index][T];
-                cap[FROM_SINK] = 0;
-                // Right vertex
-                cap[RIGHT] = (j < W - 1) ? capacity[index][index + 1] : 0;
-                // Down vertex
-                cap[UP] = (i > 0) ? capacity[index][index - W] : 0;
-                // Left vertex
-                cap[LEFT] = (j > 0) ? capacity[index][index - 1] : 0;
-                // Upwards vertex
-                cap[DOWN] = (i < H - 1) ? capacity[index][index + W] : 0;            
-
-                temp_v.push_back(Node(cap));
+            for(int j = 0; j < w; j++)
+            {   
+                temp_v.push_back(Node(zero));
 
             }
             nodes.push_back(temp_v);
             temp_v.clear();
         }
-        E_T = capacity[0][T];
-        E_S = -(capacity[0][T]);
     }
 
 
 
 
-    void initializations(graph capacity, int width, int height)
+    void initializations(int width, int height)
     {
         W = width;
         H = height;
         N = W * H;
-        S = 0;
-        T = N + 1;
-        initialize_nodes(capacity);
+        E_S = 0;
+        E_T = 0;
+        //initialize_nodes(capacity);
         //initialize_graphs();
     }
 
@@ -427,11 +413,13 @@ namespace grid{
 
     }
 
-    int goldberg_grid(graph capacity, int width, int height){
+    int goldberg_grid(int width, int height){
         
         // Initialization 
-        initializations(capacity, width, height);
+        initializations(width, height);
+        print_stats();
         pre_flow();
+        print_stats();
 
         int i = 0;
         while(check_excess())

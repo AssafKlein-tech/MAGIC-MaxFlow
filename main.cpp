@@ -87,13 +87,42 @@ int max_flow(int s, int t)
     return max_flow;
 }
 
+void creates_nodes(graph capacity, int w, int h)
+{
+    int n = w * h;
+    grid::initialize_nodes(w,h);
+    int index;
+    for(int y=0;y<h;y++)
+    for(int x=0;x<w;x++)
+    {
+        index = x+y*w + 1;
+        grid::set_terminal_cap(x, y, capacity[0][index], capacity[index][n + 1]);
+
+        if (x>0  ) // Left
+            grid::set_neighbor_cap(x,y,-1, 0,capacity[index][index - 1]);
+
+        if (x<w-1) // right
+            grid::set_neighbor_cap(x,y,+1, 0,capacity[index][index + 1]);
+
+        if (y>0  ) // up
+            grid::set_neighbor_cap(x,y, 0,+1,capacity[index][index - w]);
+
+        if (y<h-1) // down
+            grid::set_neighbor_cap(x,y, 0,-1,capacity[index][index + w]);
+
+    }                
+
+}
+
+
+
 
 int main()
 {
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
-    //double serial_time;
+    double serial_time;
     double parallel_time;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     for(int i = 0; i< M; ++i)
@@ -101,26 +130,28 @@ int main()
         // graph_gen(&capacity, &n);
         int width, height;
         grid_graph_gen(&capacity, &width, &height, &n);
+        capacity[width*height + 1][width*height +1] = 0;
         cout << "\ngraph size:" << n << endl;
-        //start = sc.now();     // start timer
-        //int maxflow = max_flow(0, n-1);
-        //end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
-        //time_span = static_cast<chrono::duration<double>>(end - start);
-        //serial_time = time_span.count();
-        //cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
-        //start = sc.now();
-        //maxflow = goldberg(capacity, n);
-        //end = sc.now();
-       // time_span = static_cast<chrono::duration<double>>(end - start);
-        //parallel_time = time_span.count();
-        //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+        start = sc.now();     // start timer
+        int maxflow = max_flow(0, n-1);
+        end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
+        time_span = static_cast<chrono::duration<double>>(end - start);
+        serial_time = time_span.count();
+        cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
         start = sc.now();
-        int maxflow = grid::goldberg_grid(capacity, width, height);
+        maxflow = goldberg(capacity, n);
+        end = sc.now();
+        time_span = static_cast<chrono::duration<double>>(end - start);
+        parallel_time = time_span.count();
+        cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+        creates_nodes(capacity, width, height);
+        start = sc.now();
+        maxflow = grid::goldberg_grid(width, height);
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        //cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
+        cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
 
     }
     return 0;

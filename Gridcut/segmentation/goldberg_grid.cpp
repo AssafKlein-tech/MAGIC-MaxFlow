@@ -35,17 +35,17 @@ namespace grid{
     //graph d, e;
     int E_S, E_T, D_S, D_T;
     int N, W, H, S, T;
-    struct Node;
+    struct Node; // 144 bytes . without flow 128, 104
     vector<vector<Node>> nodes;
     struct Node{
-        int e;
-        int d;
-        int flow [SIZE];
-        int neighbor_heights [SIZE];
-        int residual_capacities [SIZE];
-        int sigma [SIZE];
-        int temp_vector1 [SIZE]; // used as temp vector 1
-        int temp_vector2 [SIZE]; // used as temp vector 2
+        int e; // 4
+        int d; // 4
+        int flow [SIZE]; // 16 
+        int neighbor_heights [SIZE]; // 16
+        int residual_capacities [SIZE]; // 32
+        int sigma [SIZE]; // 24
+        int temp_vector1 [SIZE]; // used as temp vector 1 // 24
+        int temp_vector2 [SIZE]; // used as temp vector 2 // 24
         
         Node (
             int residual[SIZE])
@@ -213,7 +213,7 @@ namespace grid{
     void set_terminal_cap(int idxX, int idxY, int cap_source, int cap_sink)
     {
         nodes[idxY][idxX].residual_capacities[FROM_SOURCE] = cap_source;
-        nodes[idxY][idxX].residual_capacities[FROM_SINK] = cap_sink;
+        nodes[idxY][idxX].residual_capacities[TO_SINK] = cap_sink;
     }
 
     void set_neighbor_cap(int idxX, int idxY, int offset_x, int offset_y, int cap)
@@ -293,7 +293,7 @@ namespace grid{
                 sum += flow;
 
                 // The source height
-                nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
+                //nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
                 nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
             }
         }
@@ -312,13 +312,52 @@ namespace grid{
         {
             for(int j = 0; j < W; j++)
             {
+                /*
+                if (nodes[i][j].e > 0)
+                    nodes[i][j].calc_out_flows();
+                */
+                
                 nodes[i][j].calc_out_flows();
             }
         }
     }   
 
+
+    long latencu = 0;
+
     void push_flow()
     {
+
+
+
+        // Copy = 1
+        // Increment (N) = 5N
+        // Addition (N) = 10N
+        // Maximum (N) = 10N
+        // Minimum (N) = 10N
+
+
+        // Comunication
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].x = nodes[i - 1][j].x;
+            }
+        }
+        latency += NUM_COMMUNCATIONS;
+
+        // Computation
+        for(int i ..){
+            for(int j){
+                nodes[i][j].y = nodes[i][j].x - ndoes[i][j].z;
+            }
+        }
+        latency += 
+
+
+
+
+
+
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
@@ -429,6 +468,10 @@ namespace grid{
             relabel();
             update_excess();
             i++;  
+            if (i %10000 == 0)
+            {
+                cout << i << endl;
+            }
         }
         cout << "number of iterations: " << i << endl;
         return E_T;

@@ -226,7 +226,7 @@ void update_excess()
 int goldberg(graph capacity, int num_vertices)
 {
     initializations(0, capacity, num_vertices);
-    //print_C();
+    print_C();
     pre_flow();
     //print_F();
     int i = 0;
