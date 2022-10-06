@@ -93,7 +93,7 @@ int main()
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
-    double serial_time;
+    //double serial_time;
     double parallel_time;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     for(int i = 0; i< M; ++i)
@@ -103,7 +103,7 @@ int main()
         grid_graph_gen(&capacity, &width, &height, &n);
         cout << "\ngraph size:" << n << endl;
         //start = sc.now();     // start timer
-       // int maxflow = max_flow(0, n-1);
+        //int maxflow = max_flow(0, n-1);
         //end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
         //time_span = static_cast<chrono::duration<double>>(end - start);
         //serial_time = time_span.count();

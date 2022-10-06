@@ -8,6 +8,7 @@
 #include "dataset.h"
 #include "mfi.h"
 #include "timer.h"
+#include "goldberg_grid.cpp"
 
 #include <iostream>
 #include <fstream>
@@ -25,17 +26,18 @@ double t2;
 #define CLOCK_START()    { timerReset();    t1 = timerGet(); }
 #define CLOCK_STOP(TIME) { t2 = timerGet(); *TIME = t2-t1;   }
 
-void writeTime(string path, float time, int size,const  char * type)
+void writeTime(string path, float time, int size,const  char * type, const char* alg)
 {
     std::ofstream outfile;
     outfile.open(path, std::ios_base::app);
-    outfile << size << "," << time << "," <<type << "\n"; 
+    outfile << size << "," << time << "," <<type << "," << alg << "\n"; 
     outfile.close();
 }
 
 template<typename type_terminal_cap,typename type_neighbor_cap>
-void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow,double* time_output)
+void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow_grid, double* time_maxflow_goldberg,double* time_output)
 {
+  //cout << "Grid cut enterd" << endl;
   const int w = mfi->width;
   const int h = mfi->height;
   
@@ -52,26 +54,61 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
   CLOCK_START();
   GraphType* graph = new GraphType(w,h); 
 
+  grid::initialize_nodes(w,h);
+  //cout << "Initialize nodes" << endl;
+
+  //cout << "w: " << w << ", h: " << h << endl;
   for(int y=0;y<h;y++)
   for(int x=0;x<w;x++)
   {
     const int node = graph->node_id(x,y);
-    
+    //cout << "x: " << x << ", y: " << y << endl;
     graph->set_terminal_cap(node,cap_source[x+y*w],cap_sink[x+y*w]);
+
+    grid::set_terminal_cap(x, y, cap_source[x+y*w], cap_sink[x+y*w]);
+    //cout << "terminals fuck" << endl;
     
-    if (x>0  ) graph->set_neighbor_cap(node,-1, 0,cap_neighbor[MFI::ARC_LE][x+y*w]);
-    if (x<w-1) graph->set_neighbor_cap(node,+1, 0,cap_neighbor[MFI::ARC_GE][x+y*w]);
-    if (y>0  ) graph->set_neighbor_cap(node, 0,-1,cap_neighbor[MFI::ARC_EL][x+y*w]);
-    if (y<h-1) graph->set_neighbor_cap(node, 0,+1,cap_neighbor[MFI::ARC_EG][x+y*w]);
+    if (x>0  )
+    {
+      graph->set_neighbor_cap(node,-1, 0,cap_neighbor[MFI::ARC_LE][x+y*w]);
+      grid::set_neighbor_cap(x,y,-1, 0,cap_neighbor[MFI::ARC_LE][x+y*w]);
+    } 
+    if (x<w-1)
+    {
+      graph->set_neighbor_cap(node,+1, 0,cap_neighbor[MFI::ARC_GE][x+y*w]);
+      grid::set_neighbor_cap(x,y,+1, 0,cap_neighbor[MFI::ARC_LE][x+y*w]);
+    } 
+    if (y>0  )
+    {
+      graph->set_neighbor_cap(node, 0,-1,cap_neighbor[MFI::ARC_EL][x+y*w]);
+      grid::set_neighbor_cap(x,y, 0,-1,cap_neighbor[MFI::ARC_EL][x+y*w]);
+    } 
+    if (y<h-1)
+    {
+      graph->set_neighbor_cap(node, 0,+1,cap_neighbor[MFI::ARC_EG][x+y*w]);
+      grid::set_neighbor_cap(x,y, 0,+1,cap_neighbor[MFI::ARC_EG][x+y*w]);
+    } 
+    //cout << "neighbors fuck" << endl;
   }                
   CLOCK_STOP(time_init);
-  
+  //cout << "built graphs" << endl;
+
   CLOCK_START();
   graph->compute_maxflow();
-  CLOCK_STOP(time_maxflow);
-  
+  CLOCK_STOP(time_maxflow_grid);
+
+  cout << "Gridcut time " << time_maxflow_grid << endl;
+
+  int goldberg_maxflow;
+  CLOCK_START();
+  goldberg_maxflow = grid::goldberg_grid(w,h);
+  CLOCK_STOP(time_maxflow_goldberg);
+
   CLOCK_START();
   *out_maxflow = graph->get_flow();
+
+  if (goldberg_maxflow != *out_maxflow)
+     std::cout << "Error on computing max flow" << std::endl;
 
   for(int y=0;y<h;y++)
   for(int x=0;x<w;x++)
@@ -83,7 +120,7 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
 }
 
 template<typename type_terminal_cap,typename type_neighbor_cap>
-void run_GridCut_3D_6C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow,double* time_output)
+void run_GridCut_3D_6C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow,double* temp,double* time_output)
 {
   const int w = mfi->width;
   const int h = mfi->height;
@@ -105,6 +142,8 @@ void run_GridCut_3D_6C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
   GraphType* graph = new GraphType(w,h,d); 
 
   for(int z=0;z<d;z++)
+
+  
   for(int y=0;y<h;y++)
   for(int x=0;x<w;x++)
   {
@@ -140,7 +179,7 @@ void run_GridCut_3D_6C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
 }
 
 template<typename type_terminal_cap,typename type_neighbor_cap>
-void run_GridCut_3D_26C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow,double* time_output)
+void run_GridCut_3D_26C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double* time_init,double* time_maxflow,double* temp,double* time_output)
 {
   const int w = mfi->width;
   const int h = mfi->height;
@@ -239,7 +278,7 @@ void run_GridCut_3D_26C(MFI* mfi,unsigned char* out_label,int* out_maxflow,doubl
 
 int main(int argc,char** argv) 
 {
-  void (*run_GridCut[4][27][3][3])(MFI*,unsigned char*,int*,double*,double*,double*);                                               \
+  void (*run_GridCut[4][27][3][3])(MFI*,unsigned char*,int*,double*,double*,double*, double*);                                               \
 
   run_GridCut[2][ 4][MFI::TYPE_UINT8 ][MFI::TYPE_UINT8 ] = run_GridCut_2D_4C<unsigned char ,unsigned char >;
   run_GridCut[2][ 4][MFI::TYPE_UINT16][MFI::TYPE_UINT8 ] = run_GridCut_2D_4C<unsigned short,unsigned char >;
@@ -273,13 +312,14 @@ int main(int argc,char** argv)
     
   int num_instances = (sizeof(instances)/sizeof(Instance));
   
-  printf("instance                            time-init  time-maxflow  time-output  total\n");
+  printf("instance                            time-init  time-maxflow_grid  time-maxflow_goldberg  time-output  total\n");
   int* sizes =(int *) malloc(num_instances * sizeof(int)); 
 
   for(int i=0;i<num_instances;i++)
   {
     double sum_time_init = 0.0;
-    double sum_time_maxflow = 0.0;
+    double sum_time_maxflow_grid = 0.0;
+    double sum_time_maxflow_goldberg = 0.0;
     double sum_time_output = 0.0;
     
     for(int j=0;j<instances[i].count;j++)
@@ -308,16 +348,18 @@ int main(int argc,char** argv)
       int maxflow = -1;
 
       double time_init;
-      double time_maxflow;
+      double time_maxflow_grid;
+      double time_maxflow_goldberg;
       double time_output;
 
       run_GridCut[mfi->dimension]
                  [mfi->connectivity]
                  [mfi->type_terminal_cap]
-                 [mfi->type_neighbor_cap](mfi,label,&maxflow,&time_init,&time_maxflow,&time_output);
+                 [mfi->type_neighbor_cap](mfi,label,&maxflow,&time_init,&time_maxflow_grid, &time_maxflow_goldberg,&time_output);
 
       sum_time_init    += time_init;
-      sum_time_maxflow += time_maxflow;
+      sum_time_maxflow_grid += time_maxflow_grid;
+      sum_time_maxflow_goldberg += time_maxflow_goldberg;
       sum_time_output  += time_output;
 
       if (maxflow != mfi->maxflow)
@@ -331,12 +373,13 @@ int main(int argc,char** argv)
       mfi_free(mfi);      
     }
 
-    double sum_time_total = sum_time_init + sum_time_maxflow + sum_time_output;
+    double sum_time_total = sum_time_init + sum_time_maxflow_grid + sum_time_maxflow_goldberg + sum_time_output;
 
-    printf("%-38s % 6.4f        % 6.4f       % 6.4f % 6.4f\n",
-           instances[i].name,sum_time_init,sum_time_maxflow,sum_time_output,sum_time_total);
+    printf("%-38s % 6.4f        % 6.4f    % 6.4f    % 6.4f % 6.4f\n",
+           instances[i].name,sum_time_init,sum_time_maxflow_grid,sum_time_maxflow_goldberg,sum_time_output,sum_time_total);
 
-    writeTime(DSTPATH, sum_time_maxflow, sizes[i] , instances[i].name);
+    writeTime(DSTPATH, sum_time_maxflow_grid, sizes[i] , instances[i].name, "gridcut");
+    writeTime(DSTPATH, sum_time_maxflow_goldberg, sizes[i] , instances[i].name, "goldberg");
     
   }
   free(sizes);

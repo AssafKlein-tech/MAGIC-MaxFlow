@@ -11,8 +11,8 @@ using namespace std;
 
 typedef vector<int> vi;
 typedef vector<vi> graph;
-const int min_vert = 200;
-const int max_vert = 200;
+const int min_vert = 60;
+const int max_vert = 60;
 const int limit_capacity = 200;
 const int graph_density_percent = 50;
 const int min_percent = 1;
