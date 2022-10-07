@@ -328,7 +328,9 @@ namespace grid{
     void push_flow()
     {
 
-
+        // *********** REMINDER **************
+        // vector oprations in the same node but all nodes in parallel happen in O(1)
+        // moving data from one node to another cost O(1)
 
         // Copy = 1
         // Increment (N) = 5N
@@ -336,69 +338,139 @@ namespace grid{
         // Maximum (N) = 10N
         // Minimum (N) = 10N
 
-
-        // Comunication
+        // Computation 1 - subtracting sigma from Cf
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++){
-                nodes[i][j].x = nodes[i - 1][j].x;
-            }
-        }
-        latency += NUM_COMMUNCATIONS;
-
-        // Computation
-        for(int i ..){
-            for(int j){
-                nodes[i][j].y = nodes[i][j].x - ndoes[i][j].z;
-            }
-        }
-        latency += 
-
-
-
-
-
-
-        for(int i = 0; i < H; i++)
-        {
-            for(int j = 0; j < W; j++)
-            {
-                Node *node = &(nodes[i][j]);
-                //update out flow
                 for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
-                {
-                    node->flow[k] += node->sigma[k];
-                    node->residual_capacities[k] -= node->sigma[k];
-                }
-
-                // update in flow
-                node->flow[RIGHT] -= (j < W - 1)
-                ? nodes[i][j + 1].sigma[LEFT] : 0;
-                node->flow[DOWN] -= (i < H - 1)
-                ? nodes[i + 1][j].sigma[UP] : 0;        
-                node->flow[LEFT] -= (j > 0)
-                ? nodes[i][j- 1].sigma[RIGHT] : 0; 
-                node->flow[UP] -= (i > 0)
-                ? nodes[i - 1][j].sigma[DOWN] : 0;
-               // node->flow[TO_SOURCE] -= node->sigma[FROM_SOURCE];
-                node->flow[FROM_SOURCE] -= node->sigma[TO_SOURCE];
-                //node->flow[TO_SINK] -= node->sigma[FROM_SINK];
-                node->flow[FROM_SINK] -= node->sigma[TO_SINK];               
-
-                // Residual capacities
-                node->residual_capacities[RIGHT] += (j < W - 1)
-                ? nodes[i][j+ 1].sigma[LEFT] : 0;
-                node->residual_capacities[DOWN] += (i < H - 1)
-                ? nodes[i + 1][j].sigma[UP] : 0;        
-                node->residual_capacities[LEFT] += (j> 0)
-                ? nodes[i][j- 1].sigma[RIGHT] : 0; 
-                node->residual_capacities[UP] += (i > 0)
-                ? nodes[i - 1][j].sigma[DOWN] : 0;
-                //node->residual_capacities[TO_SOURCE] += node->sigma[FROM_SOURCE];
-                node->residual_capacities[FROM_SOURCE] += node->sigma[TO_SOURCE];
-               // node->residual_capacities[TO_SINK] += node->sigma[FROM_SINK];
-                node->residual_capacities[FROM_SINK] += node->sigma[TO_SINK];  
+                    nodes[i][j].residual_capacities[k] = nodes[i][j].residual_capacities[k] - nodes[i][j].sigma[k];
             }
         }
+
+        // Computation 2 - copying sigma to temp_vector1 - considering just 
+        // overriding sigma but it might be used in following functions
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
+                    nodes[i][j].temp_vector1[k] = nodes[i][j].sigma[k];
+            }
+        }
+
+        // Communication 1 - placing the RIGHT sigma values in another node
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].temp_vector1[RIGHT] = (j > 0) ? nodes[i][j - 1].temp_vector1[RIGHT] : 0;
+            }
+        }
+        // Communication 2 - placing the DOWN sigma values in another node
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].temp_vector1[DOWN] = (i > 0) ? nodes[i - 1][j].temp_vector1[DOWN] : 0;
+            }
+        }
+        // Communication 3 - placing the LEFT sigma values in another node
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].temp_vector1[LEFT] = (j < W - 1) ? nodes[i][j + 1].temp_vector1[LEFT] : 0;
+            }
+        }
+        // Communication 4 - placing the UP sigma values in another node
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].temp_vector1[UP] = (i < H - 1) ? nodes[i + 1][j].temp_vector1[UP] : 0;
+            }
+        }
+        // Computation 3 - adding temp_vector1 to the correct place in Cf RIGHT
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[RIGHT] += nodes[i][j].temp_vector1[LEFT];
+            }
+        }
+        // Computation 4 - adding temp_vector1 to the correct place in Cf DOWN
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[DOWN] += nodes[i][j].temp_vector1[UP];
+            }
+        }
+        // Computation 5 - adding temp_vector1 to the correct place in Cf LEFT
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[LEFT] += nodes[i][j].temp_vector1[RIGHT];
+            }
+        }
+        // Computation 6 - adding temp_vector1 to the correct place in Cf UP
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[UP] += nodes[i][j].temp_vector1[DOWN];
+            }
+        }
+        // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[FROM_SOURCE] += nodes[i][j].temp_vector1[TO_SOURCE];
+            }
+        }
+        // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SINK
+        for(int i = 0; i < H; i++){
+            for(int j = 0; j < W; j++){
+                nodes[i][j].residual_capacities[FROM_SINK] += nodes[i][j].temp_vector1[TO_SINK];
+            }
+        }
+        // latency += NUM_COMMUNCATIONS;
+
+        // // Computation
+        // for(int i ..){
+        //     for(int j){
+        //         nodes[i][j].y = nodes[i][j].x - ndoes[i][j].z;
+        //     }
+        // }
+        // latency += 
+
+
+
+
+
+
+        // for(int i = 0; i < H; i++)
+        // {
+        //     for(int j = 0; j < W; j++)
+        //     {
+        //         Node *node = &(nodes[i][j]);
+        //         //update out flow
+        //         for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
+        //         {
+        //             node->flow[k] += node->sigma[k];
+        //             node->residual_capacities[k] -= node->sigma[k];
+        //         }
+
+        //         // update in flow
+        //         node->flow[RIGHT] -= (j < W - 1)
+        //         ? nodes[i][j + 1].sigma[LEFT] : 0;
+        //         node->flow[DOWN] -= (i < H - 1)
+        //         ? nodes[i + 1][j].sigma[UP] : 0;        
+        //         node->flow[LEFT] -= (j > 0)
+        //         ? nodes[i][j- 1].sigma[RIGHT] : 0; 
+        //         node->flow[UP] -= (i > 0)
+        //         ? nodes[i - 1][j].sigma[DOWN] : 0;
+        //        // node->flow[TO_SOURCE] -= node->sigma[FROM_SOURCE];
+        //         node->flow[FROM_SOURCE] -= node->sigma[TO_SOURCE];
+        //         //node->flow[TO_SINK] -= node->sigma[FROM_SINK];
+        //         node->flow[FROM_SINK] -= node->sigma[TO_SINK];               
+
+        //         // Residual capacities
+        //         node->residual_capacities[RIGHT] += (j < W - 1)
+        //         ? nodes[i][j+ 1].sigma[LEFT] : 0;
+        //         node->residual_capacities[DOWN] += (i < H - 1)
+        //         ? nodes[i + 1][j].sigma[UP] : 0;        
+        //         node->residual_capacities[LEFT] += (j> 0)
+        //         ? nodes[i][j- 1].sigma[RIGHT] : 0; 
+        //         node->residual_capacities[UP] += (i > 0)
+        //         ? nodes[i - 1][j].sigma[DOWN] : 0;
+        //         //node->residual_capacities[TO_SOURCE] += node->sigma[FROM_SOURCE];
+        //         node->residual_capacities[FROM_SOURCE] += node->sigma[TO_SOURCE];
+        //        // node->residual_capacities[TO_SINK] += node->sigma[FROM_SINK];
+        //         node->residual_capacities[FROM_SINK] += node->sigma[TO_SINK];  
+        //     }
+        // }
     }
     
 

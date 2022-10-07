@@ -35,17 +35,17 @@ namespace grid{
     //graph d, e;
     int E_S, E_T, D_S, D_T;
     int N, W, H, S, T;
-    struct Node;
+    struct Node; // 144 bytes . without flow 128, 104
     vector<vector<Node>> nodes;
     struct Node{
-        int e;
-        int d;
-        int flow [SIZE];
-        int neighbor_heights [SIZE];
-        int residual_capacities [SIZE];
-        int sigma [SIZE];
-        int temp_vector1 [SIZE]; // used as temp vector 1
-        int temp_vector2 [SIZE]; // used as temp vector 2
+        int e; // 4
+        int d; // 4
+        int flow [SIZE]; // 16 
+        int neighbor_heights [SIZE]; // 16
+        int residual_capacities [SIZE]; // 32
+        int sigma [SIZE]; // 24
+        int temp_vector1 [SIZE]; // used as temp vector 1 // 24
+        int temp_vector2 [SIZE]; // used as temp vector 2 // 24
         
         Node (
             int residual[SIZE])
@@ -259,6 +259,8 @@ namespace grid{
         W = width;
         H = height;
         N = W * H;
+        S = 0;
+        T = N + 1;
         E_S = 0;
         E_T = 0;
         //initialize_nodes(capacity);
@@ -291,7 +293,7 @@ namespace grid{
                 sum += flow;
 
                 // The source height
-                nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
+                //nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
                 nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
             }
         }
@@ -310,13 +312,124 @@ namespace grid{
         {
             for(int j = 0; j < W; j++)
             {
+                /*
+                if (nodes[i][j].e > 0)
+                    nodes[i][j].calc_out_flows();
+                */
+                
                 nodes[i][j].calc_out_flows();
             }
         }
     }   
 
+
+    long latencu = 0;
+
     void push_flow()
     {
+
+        // // *********** REMINDER **************
+        // // vector oprations in the same node but all nodes in parallel happen in O(1)
+        // // moving data from one node to another cost O(1)
+
+        // // Copy = 1
+        // // Increment (N) = 5N
+        // // Addition (N) = 10N
+        // // Maximum (N) = 10N
+        // // Minimum (N) = 10N
+
+        // // Computation 1 - subtracting sigma from Cf
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
+        //             nodes[i][j].residual_capacities[k] = nodes[i][j].residual_capacities[k] - nodes[i][j].sigma[k];
+        //     }
+        // }
+
+        // // Computation 2 - copying sigma to temp_vector1 - considering just 
+        // // overriding sigma but it might be used in following functions
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
+        //             nodes[i][j].temp_vector1[k] = nodes[i][j].sigma[k];
+        //     }
+        // }
+
+        // // Communication 1 - placing the RIGHT sigma values in another node
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].temp_vector1[RIGHT] = (j > 0) ? nodes[i][j - 1].temp_vector1[RIGHT] : 0;
+        //     }
+        // }
+        // // Communication 2 - placing the DOWN sigma values in another node
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].temp_vector1[DOWN] = (i > 0) ? nodes[i - 1][j].temp_vector1[DOWN] : 0;
+        //     }
+        // }
+        // // Communication 3 - placing the LEFT sigma values in another node
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].temp_vector1[LEFT] = (j < W - 1) ? nodes[i][j + 1].temp_vector1[LEFT] : 0;
+        //     }
+        // }
+        // // Communication 4 - placing the UP sigma values in another node
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].temp_vector1[UP] = (i < H - 1) ? nodes[i + 1][j].temp_vector1[UP] : 0;
+        //     }
+        // }
+        // // Computation 3 - adding temp_vector1 to the correct place in Cf RIGHT
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[RIGHT] += nodes[i][j].temp_vector1[LEFT];
+        //     }
+        // }
+        // // Computation 4 - adding temp_vector1 to the correct place in Cf DOWN
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[DOWN] += nodes[i][j].temp_vector1[UP];
+        //     }
+        // }
+        // // Computation 5 - adding temp_vector1 to the correct place in Cf LEFT
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[LEFT] += nodes[i][j].temp_vector1[RIGHT];
+        //     }
+        // }
+        // // Computation 6 - adding temp_vector1 to the correct place in Cf UP
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[UP] += nodes[i][j].temp_vector1[DOWN];
+        //     }
+        // }
+        // // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[FROM_SOURCE] += nodes[i][j].temp_vector1[TO_SOURCE];
+        //     }
+        // }
+        // // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SINK
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++){
+        //         nodes[i][j].residual_capacities[FROM_SINK] += nodes[i][j].temp_vector1[TO_SINK];
+        //     }
+        // }
+        // // latency += NUM_COMMUNCATIONS;
+
+        // // // Computation
+        // // for(int i ..){
+        // //     for(int j){
+        // //         nodes[i][j].y = nodes[i][j].x - ndoes[i][j].z;
+        // //     }
+        // // }
+        // // latency += 
+
+
+
+
+
+
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
@@ -417,9 +530,7 @@ namespace grid{
         
         // Initialization 
         initializations(width, height);
-        print_stats();
         pre_flow();
-        print_stats();
 
         int i = 0;
         while(check_excess())
@@ -429,6 +540,10 @@ namespace grid{
             relabel();
             update_excess();
             i++;  
+            if (i %10000 == 0)
+            {
+                cout << i << endl;
+            }
         }
         cout << "number of iterations: " << i << endl;
         return E_T;

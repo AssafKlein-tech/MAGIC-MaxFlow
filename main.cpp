@@ -130,7 +130,7 @@ int main()
         // graph_gen(&capacity, &n);
         int width, height;
         grid_graph_gen(&capacity, &width, &height, &n);
-        capacity[width*height + 1][width*height +1] = 0;
+        capacity[0][width*height +1] = 0;
         cout << "\ngraph size:" << n << endl;
         start = sc.now();     // start timer
         int maxflow = max_flow(0, n-1);
