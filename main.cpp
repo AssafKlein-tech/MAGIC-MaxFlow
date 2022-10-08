@@ -7,7 +7,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 1;
+int M = 20;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -87,7 +87,7 @@ int max_flow(int s, int t)
     return max_flow;
 }
 
-void creates_nodes(graph capacity, int w, int h)
+void create_nodes(graph capacity, int w, int h)
 {
     int n = w * h;
     grid::initialize_nodes(w,h);
@@ -144,9 +144,13 @@ int main()
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        creates_nodes(capacity, width, height);
+        create_nodes(capacity, width, height);
         start = sc.now();
-        maxflow = grid::goldberg_grid(width, height);
+        maxflow = grid::goldberg_grid(width, height, maxflow);
+        if ( maxflow == -1)
+        {
+            print_C();
+        }
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
