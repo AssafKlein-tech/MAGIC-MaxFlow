@@ -356,24 +356,44 @@ namespace grid{
 
     void calc_outflow()
     {
-        int sum;
+        // Computation 1 - Compute the maximum flow to each neighbor in this iteration
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
-            {
-                // Computation 1 - Compute the maximum flow to each neighbor in this iteration
+            {  
                 for (int k = 0; k < OUT_VERTICES; k++)
                 {
                     // temp vector 1 used as Cf temp - IDK if it is a legal writing
                     nodes[i][j].temp_vector1[k] = nodes[i][j].d - nodes[i][j].neighbor_heights[k]; // compute 
                     nodes[i][j].temp_vector1[k] = (nodes[i][j].temp_vector1[k] == 1) ? nodes[i][j].residual_capacities[k] :  0; //can be translated to and and not to mux
                 }
+            }
+        }
+
+        // Computation 2 - execute suffix sum on temp_voctor1 and save it on temp_vector2
+        int sum;
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
                 sum = 0;
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
                 {
                     nodes[i][j].temp_vector2[k] = sum; // temp vector 2 used as Cf sum
                     sum += nodes[i][j].temp_vector1[k];
-                    nodes[i][j].sigma[k] = std::min((nodes[i][j].e - nodes[i][j].temp_vector2[k]), nodes[i][j].temp_vector1[k]);
+                }
+            }
+        }
+
+        // Computation 3 - compute sigma. non neggative flow of max of capacity or excess left 
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
+                for (int k = OUT_VERTICES - 1; k >= 0; k--)
+                {
+                    nodes[i][j].temp_vector2[k] =  nodes[i][j].e - nodes[i][j].temp_vector2[k]; // can we make in this computation all negative to zeroes?
+                    nodes[i][j].sigma[k] = std::min(nodes[i][j].temp_vector2[k], nodes[i][j].temp_vector1[k]);
                     nodes[i][j].sigma[k] = std::max(nodes[i][j].sigma[k], 0);
                 }
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
@@ -422,8 +442,9 @@ namespace grid{
                     // Communication 1 - placing the RIGHT sigma values in another node
                     nodes[i][j + 1].temp_vector1[RIGHT] = nodes[i][j].temp_vector1[RIGHT];
 
-                    // Computation 3 - adding temp_vector1 to the correct place in Cf LEFT
+                    // Computation 3 - adding temp_vector1 to the correct place in Cf LEFT + excess
                     nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector1[RIGHT];
+                    nodes[i][j + 1].e += nodes[i][j + 1].temp_vector1[RIGHT];
                 }
 
                 
@@ -432,8 +453,9 @@ namespace grid{
                     // Communication 2 - placing the DOWN sigma values in another node
                     nodes[i + 1][j].temp_vector1[DOWN] = nodes[i][j].temp_vector1[DOWN];
 
-                    // Computation 4 - adding temp_vector1 to the correct place in Cf UP
+                    // Computation 4 - adding temp_vector1 to the correct place in Cf UP + excess
                     nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector1[DOWN];
+                    nodes[i + 1][j].e += nodes[i + 1][j].temp_vector1[DOWN];
                 }
 
                 if ( j > 0 )
@@ -441,8 +463,9 @@ namespace grid{
                      // Communication 3 - placing the LEFT sigma values in another node
                     nodes[i][j - 1].temp_vector1[LEFT] = nodes[i][j].temp_vector1[LEFT];
 
-                    // Computation 5 - adding temp_vector1 to the correct place in Cf RIGHT
+                    // Computation 5 - adding temp_vector1 to the correct place in Cf RIGHT + excess
                     nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector1[LEFT];
+                    nodes[i][j - 1].e += nodes[i][j - 1].temp_vector1[LEFT];
                 }
 
                 if ( i > 0 )
@@ -450,81 +473,29 @@ namespace grid{
                     // Communication 4 - placing the UP sigma values in another node
                     nodes[i - 1][j].temp_vector1[UP] = nodes[i][j].temp_vector1[UP];
 
-                    // Computation 6 - adding temp_vector1 to the correct place in Cf DOWN
+                    // Computation 6 - adding temp_vector1 to the correct place in Cf DOWN + escess
                     nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector1[UP];
+                    nodes[i - 1][j].e += nodes[i - 1][j].temp_vector1[UP];
                 }
             }
 
         }
+        
 
         // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++){
                 nodes[i][j].residual_capacities[FROM_SOURCE] += nodes[i][j].sigma[TO_SOURCE];
+                E_S += nodes[i][j].sigma[TO_SOURCE];
             }
         }
         // Computation 8 - adding temp_vector1 to the correct place in Cf FROM_SINK
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++){
                 nodes[i][j].residual_capacities[FROM_SINK] += nodes[i][j].sigma[TO_SINK];
+                E_T += nodes[i][j].sigma[TO_SINK];
             }
         }
-        // latency += NUM_COMMUNCATIONS;
-
-        // // Computation
-        // for(int i ..){
-        //     for(int j){
-        //         nodes[i][j].y = nodes[i][j].x - ndoes[i][j].z;
-        //     }
-        // }
-        // latency += 
-
-
-
-
-
-
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         Node *node = &(nodes[i][j]);
-        //         //update out flow
-        //         for (int k = RIGHT ; k <= OUT_VERTICES; k++) 
-        //         {
-        //             node->flow[k] += node->sigma[k];
-        //             node->residual_capacities[k] -= node->sigma[k];
-        //         }
-
-        //         // update in flow
-        //         node->flow[RIGHT] -= (j < W - 1)
-        //         ? nodes[i][j + 1].sigma[LEFT] : 0;
-        //         node->flow[DOWN] -= (i < H - 1)
-        //         ? nodes[i + 1][j].sigma[UP] : 0;        
-        //         node->flow[LEFT] -= (j > 0)
-        //         ? nodes[i][j- 1].sigma[RIGHT] : 0; 
-        //         node->flow[UP] -= (i > 0)
-        //         ? nodes[i - 1][j].sigma[DOWN] : 0;
-        //        // node->flow[TO_SOURCE] -= node->sigma[FROM_SOURCE];
-        //         node->flow[FROM_SOURCE] -= node->sigma[TO_SOURCE];
-        //         //node->flow[TO_SINK] -= node->sigma[FROM_SINK];
-        //         node->flow[FROM_SINK] -= node->sigma[TO_SINK];               
-
-        //         // Residual capacities
-        //         node->residual_capacities[RIGHT] += (j < W - 1)
-        //         ? nodes[i][j+ 1].sigma[LEFT] : 0;
-        //         node->residual_capacities[DOWN] += (i < H - 1)
-        //         ? nodes[i + 1][j].sigma[UP] : 0;        
-        //         node->residual_capacities[LEFT] += (j> 0)
-        //         ? nodes[i][j- 1].sigma[RIGHT] : 0; 
-        //         node->residual_capacities[UP] += (i > 0)
-        //         ? nodes[i - 1][j].sigma[DOWN] : 0;
-        //         //node->residual_capacities[TO_SOURCE] += node->sigma[FROM_SOURCE];
-        //         node->residual_capacities[FROM_SOURCE] += node->sigma[TO_SOURCE];
-        //        // node->residual_capacities[TO_SINK] += node->sigma[FROM_SINK];
-        //         node->residual_capacities[FROM_SINK] += node->sigma[TO_SINK];  
-        //     }
-        // }
     }
     
 
@@ -562,23 +533,6 @@ namespace grid{
         }
     }
 
-    void update_excess()
-    {
-        for(int i = 0; i < H; i++)
-        {
-            for(int j = 0; j < W; j++)
-            {
-                Node *node = &(nodes[i][j]);
-                node->e += (j < W - 1) ? nodes[i][j + 1].sigma[LEFT] : 0; // right
-                node->e += (i > 0) ? nodes[i - 1][j].sigma[DOWN] : 0; // down
-                node->e += (j > 0) ? nodes[i][j - 1].sigma[RIGHT] : 0; // left
-                node->e += (i < H - 1) ? nodes[i + 1][j].sigma[UP] : 0; // up
-                E_S += node->sigma[TO_SOURCE];
-                E_T += node->sigma[TO_SINK];
-            }
-        }
-
-    }
 
     int goldberg_grid(int width, int height, int maxflow){
         
@@ -592,7 +546,7 @@ namespace grid{
             calc_outflow();
             push_flow();
             relabel();
-            update_excess();
+            //update_excess();
             i++;  
             if (i %10000 == 0)
             {
