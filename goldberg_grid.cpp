@@ -34,18 +34,19 @@ namespace grid{
     long latency = 0;
     int E_S, E_T, D_S, D_T;
     int N, W, H, S, T;
-    struct Node; // 144 bytes . without flow 128, 104
+    struct Node; // 104
     vector<vector<Node>> nodes;
     struct Node{
         int e; // 4
         int d; // 4
-        int flow [SIZE]; // 16 
-        int neighbor_heights [SIZE]; // 16
+       // int flow [SIZE]; // 16 
+        int neighbor_heights [OUT_VERTICES]; // 16
         int residual_capacities [SIZE]; // 32
-        int sigma [SIZE]; // 24
-        int temp_vector1 [SIZE]; // used as temp vector 1 // 24
-        int temp_vector2 [SIZE]; // used as temp vector 2 // 24
-        //i, j ?
+        short sigma [OUT_VERTICES]; // 12
+        short temp_vector1 [OUT_VERTICES]; // used as temp vector 1 // 12
+        int temp_vector2 [OUT_VERTICES]; // used as temp vector 2 // 24
+        //E_S, E_T, D_S, D_T , i ,j
+        
         
         Node (
             int residual[SIZE])
@@ -55,50 +56,16 @@ namespace grid{
                 for (int i = 0; i < SIZE; i++)
                 {
                     residual_capacities[i] = residual[i];
-                    flow[i] = 0;
-                    neighbor_heights[i] = 0;
-                    sigma[i] = 0;
-                    temp_vector1[i] = 0;
-                    temp_vector2[i] = 0;
+                    //flow[i] = 0;
+                    if (i < OUT_VERTICES)
+                    {
+                        neighbor_heights[i] = 0;
+                        sigma[i] = 0;
+                        temp_vector1[i] = 0;
+                        temp_vector2[i] = 0;
+                    }
                 }
             }
-        
-
-        void calc_cfTemp()
-        {
-            for (int i = 0; i < OUT_VERTICES; i++)
-            {
-                // temp vector 1 used as Cf temp
-                temp_vector1[i] = (d - neighbor_heights[i] == 1) ? residual_capacities[i] : 0;
-            }
-        }
-
-        void sf_sum()
-        { 
-            int sum = 0;
-            for (int i = OUT_VERTICES - 1; i >= 0; i--)
-            {
-                temp_vector2[i] = sum; // temp vector 2 used as Cf sum
-                sum += temp_vector1[i];
-                // temp vector 1 used as Cf temp
-                // temp vector 2 used as Cf sum
-                sigma[i] = std::min((e - temp_vector2[i]), temp_vector1[i]);
-                sigma[i] = std::max(sigma[i], 0);
-            }
-            for (int i = OUT_VERTICES - 1; i >= 0; i--)
-            {
-                e -= sigma[i];
-            }
-
-        }
-
-
-
-        void calc_out_flows()
-        {
-            calc_cfTemp();
-            sf_sum();
-        }
     };
 
 
@@ -275,78 +242,78 @@ namespace grid{
         int sum = 0;
 
 
-        // // Computation 1 - pushing the flow from the source, reversing the
-        // // residual vertex direction
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         nodes[i][j].residual_capacities[TO_SOURCE] = nodes[i][j].residual_capacities[FROM_SOURCE];
-        //     }
-        // }
-
-        // // Computation 2 - updating the excess after flow push from source
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         nodes[i][j].e = nodes[i][j].residual_capacities[FROM_SOURCE];
-        //     }
-        // }
-
-        // // Computation 3 - updating the sum
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         sum += nodes[i][j].residual_capacities[FROM_SOURCE];
-        //     }
-        // }
-
-        // // Computation 4 - reseting the residual vertex from source
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
-        //     }
-        // }
-
-        // // Computation 5 - updating the source height
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
-        //     }
-        // }
-        // E_S -= sum;
-
-
-        int flow;
+        // Computation 1 - pushing the flow from the source, reversing the
+        // residual vertex direction
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
             {
-                flow = nodes[i][j].residual_capacities[FROM_SOURCE];
-                
-                //updates the flow matrix
-                nodes[i][j].flow[FROM_SOURCE] = flow;
+                nodes[i][j].residual_capacities[TO_SOURCE] = nodes[i][j].residual_capacities[FROM_SOURCE];
+            }
+        }
 
-                //updates the residual_capacities
+        // Computation 2 - updating the excess after flow push from source
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
+                nodes[i][j].e = nodes[i][j].residual_capacities[FROM_SOURCE];
+            }
+        }
+
+        // Computation 3 - updating the sum - 
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
+                sum += nodes[i][j].residual_capacities[FROM_SOURCE];
+            }
+        }
+
+        // Computation 4 - reseting the residual vertex from source
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
                 nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
-                nodes[i][j].residual_capacities[TO_SOURCE] = flow;
+            }
+        }
 
-                // the excess for each node
-                nodes[i][j].e = flow;
-                sum += flow;
-
-                // The source height
-                //nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
+        // Computation 5 - updating the source height
+        for(int i = 0; i < H; i++)
+        {
+            for(int j = 0; j < W; j++)
+            {
                 nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
             }
         }
         E_S -= sum;
+
+
+        // int flow;
+        // for(int i = 0; i < H; i++)
+        // {
+        //     for(int j = 0; j < W; j++)
+        //     {
+        //         flow = nodes[i][j].residual_capacities[FROM_SOURCE];
+                
+        //         //updates the flow matrix
+        //        // nodes[i][j].flow[FROM_SOURCE] = flow;
+
+        //         //updates the residual_capacities
+        //         nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
+        //         nodes[i][j].residual_capacities[TO_SOURCE] = flow;
+
+        //         // the excess for each node
+        //         nodes[i][j].e = flow;
+        //         sum += flow;
+
+        //         // The source height
+        //         //nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
+        //         nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
+        //     }
+        // }
+        // E_S -= sum;
     }
 
     bool check_excess()
@@ -393,8 +360,8 @@ namespace grid{
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
                 {
                     nodes[i][j].temp_vector2[k] =  nodes[i][j].e - nodes[i][j].temp_vector2[k]; // can we make in this computation all negative to zeroes?
-                    nodes[i][j].sigma[k] = std::min(nodes[i][j].temp_vector2[k], nodes[i][j].temp_vector1[k]);
-                    nodes[i][j].sigma[k] = std::max(nodes[i][j].sigma[k], 0);
+                    nodes[i][j].sigma[k] = std::min((int)nodes[i][j].temp_vector2[k], (int)nodes[i][j].temp_vector1[k]);
+                    nodes[i][j].sigma[k] = std::max((int)nodes[i][j].sigma[k], 0);
                 }
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
                 {
@@ -558,11 +525,17 @@ namespace grid{
         cout << "number of iterations: " << i << endl;
         if ( maxflow != E_T)
         {
+            cout << "XXXXX ERROR XXXXX" << endl;
             print_stats();
             cout << "max flow: " << E_T << endl;
             return -1;
         }
-        return E_T;
+        else
+        {
+            cout << "----- CORRECT -----" << endl;
+            return E_T;
+        }
+        
     }
 }
 

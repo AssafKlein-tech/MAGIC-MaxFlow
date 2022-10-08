@@ -7,7 +7,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 20;
+int M = 3;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -125,7 +125,8 @@ int main()
     double serial_time;
     double parallel_time;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
-    for(int i = 0; i< M; ++i)
+    int fail_counter = 0;
+    for(int i = 0; i < M; ++i)
     {
         // graph_gen(&capacity, &n);
         int width, height;
@@ -138,18 +139,19 @@ int main()
         time_span = static_cast<chrono::duration<double>>(end - start);
         serial_time = time_span.count();
         cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
-        start = sc.now();
-        maxflow = goldberg(capacity, n);
-        end = sc.now();
-        time_span = static_cast<chrono::duration<double>>(end - start);
-        parallel_time = time_span.count();
-        cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+        //start = sc.now();
+        //maxflow = goldberg(capacity, n);
+        //end = sc.now();
+        //time_span = static_cast<chrono::duration<double>>(end - start);
+        //parallel_time = time_span.count();
+        //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         create_nodes(capacity, width, height);
         start = sc.now();
         maxflow = grid::goldberg_grid(width, height, maxflow);
         if ( maxflow == -1)
         {
             print_C();
+            fail_counter++;
         }
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
@@ -158,6 +160,14 @@ int main()
         cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
 
     }
+    if(fail_counter == 0)
+        cout << "\n\nAll runs passed :)" << endl;
+    else
+    {
+        cout << "\n\nfailed runs:" << fail_counter << endl;
+        cout << "total runs:" << M << endl;
+    }
+
     return 0;
 }
 
