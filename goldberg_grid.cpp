@@ -331,8 +331,8 @@ namespace grid{
                 for (int k = 0; k < OUT_VERTICES; k++)
                 {
                     // temp vector 1 used as Cf temp - IDK if it is a legal writing
-                    nodes[i][j].temp_vector1[k] = nodes[i][j].d - nodes[i][j].neighbor_heights[k]; // compute 
-                    nodes[i][j].temp_vector1[k] = (nodes[i][j].temp_vector1[k] == 1) ? nodes[i][j].residual_capacities[k] :  0; //can be translated to and and not to mux
+                    nodes[i][j].temp_vector2[k] = nodes[i][j].d - nodes[i][j].neighbor_heights[k]; // compute 
+                    nodes[i][j].temp_vector2[k] = (nodes[i][j].temp_vector2[k] == 1) ? nodes[i][j].residual_capacities[k] :  0; //can be translated to and and not to mux
                 }
             }
         }
@@ -346,8 +346,8 @@ namespace grid{
                 sum = 0;
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
                 {
-                    nodes[i][j].temp_vector2[k] = sum; // temp vector 2 used as Cf sum
-                    sum += nodes[i][j].temp_vector1[k];
+                    nodes[i][j].sigma[k] = sum; // temp vector 2 used as Cf sum
+                    sum += nodes[i][j].temp_vector2[k];
                 }
             }
         }
@@ -359,8 +359,8 @@ namespace grid{
             {
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
                 {
-                    nodes[i][j].temp_vector2[k] =  nodes[i][j].e - nodes[i][j].temp_vector2[k]; // can we make in this computation all negative to zeroes?
-                    nodes[i][j].sigma[k] = std::min((int)nodes[i][j].temp_vector2[k], (int)nodes[i][j].temp_vector1[k]);
+                    nodes[i][j].sigma[k] =  nodes[i][j].e - nodes[i][j].sigma[k]; // can we make in this computation all negative to zeroes?
+                    nodes[i][j].sigma[k] = std::min((int)nodes[i][j].sigma[k], (int)nodes[i][j].temp_vector2[k]);
                     nodes[i][j].sigma[k] = std::max((int)nodes[i][j].sigma[k], 0);
                 }
                 for (int k = OUT_VERTICES - 1; k >= 0; k--)
@@ -398,48 +398,48 @@ namespace grid{
                 // Computation 2 - copying sigma to temp_vector1 - considering just 
                 // overriding sigma but it might be used in following functions
                 for (int k = RIGHT ; k <= SIGMA; k++) 
-                    nodes[i][j].temp_vector1[k] = nodes[i][j].sigma[k];
+                    nodes[i][j].temp_vector2[k] = nodes[i][j].sigma[k];
 
                 
                 if ( j < W - 1)
                 {
                     // Communication 1 - placing the RIGHT sigma values in another node
-                    nodes[i][j + 1].temp_vector1[RIGHT] = nodes[i][j].temp_vector1[RIGHT];
+                    nodes[i][j + 1].temp_vector2[RIGHT] = nodes[i][j].temp_vector2[RIGHT];
 
-                    // Computation 3 - adding temp_vector1 to the correct place in Cf LEFT + excess
-                    nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector1[RIGHT];
-                    nodes[i][j + 1].e += nodes[i][j + 1].temp_vector1[RIGHT];
+                    // Computation 3 - adding temp_vector2 to the correct place in Cf LEFT + excess
+                    nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector2[RIGHT];
+                    nodes[i][j + 1].e += nodes[i][j + 1].temp_vector2[RIGHT];
                 }
 
                 
                 if ( i < H - 1)
                 {
                     // Communication 2 - placing the DOWN sigma values in another node
-                    nodes[i + 1][j].temp_vector1[DOWN] = nodes[i][j].temp_vector1[DOWN];
+                    nodes[i + 1][j].temp_vector2[DOWN] = nodes[i][j].temp_vector2[DOWN];
 
-                    // Computation 4 - adding temp_vector1 to the correct place in Cf UP + excess
-                    nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector1[DOWN];
-                    nodes[i + 1][j].e += nodes[i + 1][j].temp_vector1[DOWN];
+                    // Computation 4 - adding temp_vector2 to the correct place in Cf UP + excess
+                    nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector2[DOWN];
+                    nodes[i + 1][j].e += nodes[i + 1][j].temp_vector2[DOWN];
                 }
 
                 if ( j > 0 )
                 {
                      // Communication 3 - placing the LEFT sigma values in another node
-                    nodes[i][j - 1].temp_vector1[LEFT] = nodes[i][j].temp_vector1[LEFT];
+                    nodes[i][j - 1].temp_vector2[LEFT] = nodes[i][j].temp_vector2[LEFT];
 
-                    // Computation 5 - adding temp_vector1 to the correct place in Cf RIGHT + excess
-                    nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector1[LEFT];
-                    nodes[i][j - 1].e += nodes[i][j - 1].temp_vector1[LEFT];
+                    // Computation 5 - adding temp_vector2 to the correct place in Cf RIGHT + excess
+                    nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector2[LEFT];
+                    nodes[i][j - 1].e += nodes[i][j - 1].temp_vector2[LEFT];
                 }
 
                 if ( i > 0 )
                 {
                     // Communication 4 - placing the UP sigma values in another node
-                    nodes[i - 1][j].temp_vector1[UP] = nodes[i][j].temp_vector1[UP];
+                    nodes[i - 1][j].temp_vector2[UP] = nodes[i][j].temp_vector2[UP];
 
-                    // Computation 6 - adding temp_vector1 to the correct place in Cf DOWN + escess
-                    nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector1[UP];
-                    nodes[i - 1][j].e += nodes[i - 1][j].temp_vector1[UP];
+                    // Computation 6 - adding temp_vector2 to the correct place in Cf DOWN + escess
+                    nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector2[UP];
+                    nodes[i - 1][j].e += nodes[i - 1][j].temp_vector2[UP];
                 }
             }
 
