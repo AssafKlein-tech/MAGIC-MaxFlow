@@ -7,7 +7,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 3;
+int M = 20;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -126,6 +126,7 @@ int main()
     double parallel_time;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     int fail_counter = 0;
+    double speedup_sum = 0, potential_speedup;
     for(int i = 0; i < M; ++i)
     {
         // graph_gen(&capacity, &n);
@@ -157,14 +158,16 @@ int main()
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        cout << "potential speedup:" << serial_time / (parallel_time/n) << endl;
-
+        potential_speedup = serial_time / (parallel_time/n);
+        cout << "potential speedup:" << potential_speedup << endl;
+        speedup_sum += potential_speedup;
     }
+    cout << "\n\nAverage potential speedup: " << (speedup_sum / M) << endl;
     if(fail_counter == 0)
-        cout << "\n\nAll runs passed :)" << endl;
+        cout << "All " << M << " runs passed :)" << endl;
     else
     {
-        cout << "\n\nfailed runs:" << fail_counter << endl;
+        cout << "failed runs:" << fail_counter << endl;
         cout << "total runs:" << M << endl;
     }
 

@@ -371,9 +371,6 @@ namespace grid{
         }
     }   
 
-
-
-
     void push_flow()
     {
 
@@ -447,7 +444,6 @@ namespace grid{
             }
 
         }
-        
 
         // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
         for(int i = 0; i < H; i++){
@@ -464,40 +460,113 @@ namespace grid{
             }
         }
     }
-    
 
     void relabel()
     {
-        //calcualte new hight
-        int min;
+        int MAX_HEIGHT = 2*(N+2), min;
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
             {
-                min = 2*(N+2);
-                Node *node = &(nodes[i][j]);
+                min = MAX_HEIGHT;
                 for (int k = 0; k < OUT_VERTICES; k++)
                 {
-                    node->temp_vector2[k] = (node->residual_capacities[k] == 0) ? 2*(N+2) : 0;
-                    node->temp_vector2[k] += node->neighbor_heights[k];
-                    min = std::min(min, node->temp_vector2[k]);
+                    // Computation 1 - setting max height to saturated vertices,
+                    // This if can be translated to bitwise operations
+                    nodes[i][j].temp_vector2[k] = (nodes[i][j].residual_capacities[k] == 0) ? MAX_HEIGHT : 0;
+                    
+                    // Computation 2 - adding the neightbors heights
+                    nodes[i][j].temp_vector2[k] += nodes[i][j].neighbor_heights[k];
+
+                    // Computation 3 - comparing the min to the current height
+                    min = std::min(min, nodes[i][j].temp_vector2[k]);
                 }
-                node->d = min + 1;
+
+                // Computation 4 - every node gets its height from the temp var
+                // "min" plus 1
+                nodes[i][j].d = min + 1;
             }
         }
 
-        // sending the neighbors the new hight
         for(int i = 0; i < H; i++)
         {
             for(int j = 0; j < W; j++)
             {
-                Node *node = &(nodes[i][j]);
-                node->neighbor_heights[RIGHT] = (j < W - 1) ? nodes[i][j + 1].d : 0;
-                node->neighbor_heights[DOWN] = (i < H - 1) ? nodes[i + 1][j].d : 0;
-                node->neighbor_heights[LEFT] = (j > 0) ? nodes[i][j - 1].d : 0;
-                node->neighbor_heights[UP] = (i > 0) ? nodes[i - 1][j].d : 0;
+
+                // Computation 5 - copying this nodes height value to the temp vector
+                nodes[i][j].temp_vector2[RIGHT] = nodes[i][j].d;
+                nodes[i][j].temp_vector2[DOWN] = nodes[i][j].d;
+                nodes[i][j].temp_vector2[LEFT] = nodes[i][j].d;
+                nodes[i][j].temp_vector2[UP] = nodes[i][j].d;
+
+                if ( j < W - 1)
+                {
+                    // Communication 1 - placing the height value in the RIGHT node
+                    nodes[i][j + 1].temp_vector2[LEFT] = nodes[i][j].temp_vector2[RIGHT];
+
+                    // Computation 6 - inserting the height value in the correct place
+                    nodes[i][j + 1].neighbor_heights[LEFT] = nodes[i][j + 1].temp_vector2[LEFT];
+                }
+                
+                if ( i < H - 1)
+                {
+                    // Communication 2 - placing the height value in the DOWN node
+                    nodes[i + 1][j].temp_vector2[UP] = nodes[i][j].temp_vector2[DOWN];
+
+                    // Computation 7 - inserting the height value in the correct place
+                    nodes[i + 1][j].neighbor_heights[UP] = nodes[i + 1][j].temp_vector2[UP];
+                }
+
+                if ( j > 0 )
+                {
+                    // Communication 3 - placing the height value in the LEFT node
+                    nodes[i][j - 1].temp_vector2[RIGHT] = nodes[i][j].temp_vector2[LEFT];
+
+                    // Computation 8 - inserting the height value in the correct place
+                    nodes[i][j - 1].neighbor_heights[RIGHT] = nodes[i][j - 1].temp_vector2[RIGHT];
+                }
+
+                if ( i > 0 )
+                {
+                    // Communication 4 - placing the height value in the DOWN node
+                    nodes[i - 1][j].temp_vector2[DOWN] = nodes[i][j].temp_vector2[UP];
+
+                    // Computation 9 - inserting the height value in the correct place
+                    nodes[i - 1][j].neighbor_heights[DOWN] = nodes[i - 1][j].temp_vector2[DOWN];
+                }
             }
         }
+
+        // // calcualte new heights
+        // int min;
+        // for(int i = 0; i < H; i++)
+        // {
+        //     for(int j = 0; j < W; j++)
+        //     {
+        //         min = 2*(N+2);
+        //         Node *node = &(nodes[i][j]);
+        //         for (int k = 0; k < OUT_VERTICES; k++)
+        //         {
+        //             node->temp_vector2[k] = (node->residual_capacities[k] == 0) ? 2*(N+2) : 0;
+        //             node->temp_vector2[k] += node->neighbor_heights[k];
+        //             min = std::min(min, node->temp_vector2[k]);
+        //         }
+        //         node->d = min + 1;
+        //     }
+        // }
+
+        // // sending the neighbors the new hight
+        // for(int i = 0; i < H; i++)
+        // {
+        //     for(int j = 0; j < W; j++)
+        //     {
+        //         Node *node = &(nodes[i][j]);
+        //         node->neighbor_heights[RIGHT] = (j < W - 1) ? nodes[i][j + 1].d : 0;
+        //         node->neighbor_heights[DOWN] = (i < H - 1) ? nodes[i + 1][j].d : 0;
+        //         node->neighbor_heights[LEFT] = (j > 0) ? nodes[i][j - 1].d : 0;
+        //         node->neighbor_heights[UP] = (i > 0) ? nodes[i - 1][j].d : 0;
+        //     }
+        // }
     }
 
 
@@ -537,8 +606,22 @@ namespace grid{
         }
         
     }
+
+    // *** pre_flow - Uses neighbor_heights vector
+    // *** calc_outflow - Uses two temp_vectors with 6 ints together and neighbor_heights, and then
+    // a temp vector with 6 ints and sigma together, maybe we should use just 
+    // sigma and one temp_vector
+    // *** push_flow - Uses sigma and temp_vector1 that uses 4 ints to communicate
+    // *** relabel - Uses neighbor_heights and a 6 int temp vector
 }
 
-
+// ----- Each node contains:
+// int e (4)
+// int d (4)
+// int neighbor_heights [OUT_VERTICES] (16)
+// int residual_capacities [SIZE] (32)
+// short sigma [OUT_VERTICES] (12)
+// int temp_vector [OUT_VERTICES] (24)
+// In total 92 Bytes
 
 #endif
