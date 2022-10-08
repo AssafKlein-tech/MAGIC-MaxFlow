@@ -610,8 +610,8 @@ namespace grid{
     // *** pre_flow - Uses neighbor_heights vector
     // *** calc_outflow - Uses two temp_vectors with 6 ints together and neighbor_heights, and then
     // a temp vector with 6 ints and sigma together, maybe we should use just 
-    // sigma and one temp_vector
-    // *** push_flow - Uses sigma and temp_vector1 that uses 4 ints to communicate
+    // sigma and one temp_vector -- added in this version
+    // *** push_flow - Uses sigma and temp_vector2 that uses 4 ints to communicate
     // *** relabel - Uses neighbor_heights and a 6 int temp vector
 }
 
