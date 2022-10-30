@@ -2,6 +2,7 @@
 #include "goldberg_grid.cpp"
 #include "graph_gen.cpp"
 #include <chrono>
+#include <string.h>
 // vector<vector<int>> capacity, flow;
 graph flow, capacity;
 vi height, excess, seen;
@@ -117,8 +118,19 @@ void create_nodes(graph capacity, int w, int h)
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    bool details = false; 
+    if (argc > 1)
+    {
+        if(strcmp(argv[1], "-details") == 0)
+            details = true; 
+        else
+        {
+            cout << "Wrong use.\nexpected \"-details\"" << endl;
+            return -1;
+        }
+    }
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
@@ -133,13 +145,15 @@ int main()
         int width, height;
         grid_graph_gen(&capacity, &width, &height, &n);
         capacity[0][width*height +1] = 0;
-        cout << "\ngraph size:" << n << endl;
+        if (details)
+            cout << "\ngraph size:" << n << endl;
         start = sc.now();     // start timer
         int maxflow = max_flow(0, n-1);
         end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
         time_span = static_cast<chrono::duration<double>>(end - start);
         serial_time = time_span.count();
-        cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
+        if ( details)
+            cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
         //start = sc.now();
         //maxflow = goldberg(capacity, n);
         //end = sc.now();
@@ -148,7 +162,7 @@ int main()
         //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         create_nodes(capacity, width, height);
         start = sc.now();
-        maxflow = grid::goldberg_grid(width, height, maxflow);
+        maxflow = grid::goldberg_grid(width, height, maxflow, details);
         if ( maxflow == -1)
         {
             print_C();
@@ -157,10 +171,13 @@ int main()
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
-        cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         potential_speedup = serial_time / (parallel_time/n);
-        cout << "potential speedup:" << potential_speedup << endl;
         speedup_sum += potential_speedup;
+        if (details)
+        {
+            cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
+            cout << "potential speedup:" << potential_speedup << endl;
+        }
     }
     cout << "\n\nAverage potential speedup: " << (speedup_sum / M) << endl;
     if(fail_counter == 0)

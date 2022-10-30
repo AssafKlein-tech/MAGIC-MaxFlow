@@ -11,13 +11,12 @@ using namespace std;
 
 typedef vector<int> vi;
 typedef vector<vi> graph;
-const int min_vert = 20;
-const int max_vert = 20;
+const int min_vert = 30;
+const int max_vert = 30;
 const int limit_capacity = 200;
 const int graph_density_percent = 50;
 const int min_percent = 1;
 const int max_percent = 100;
-
 
 int random_int(int first, int last)
 {
