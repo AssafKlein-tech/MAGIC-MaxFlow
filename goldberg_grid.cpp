@@ -31,7 +31,7 @@ namespace grid{
     
     int copy(int size_in_bytes)
     {
-        return size_in_bytes * BITSINBYTE;
+        return 2;
     }
 
     int inc(int size_in_bytes)
@@ -292,7 +292,7 @@ namespace grid{
 
         int sum = 0;
 
-
+        
         // Computation 1 - pushing the flow from the source, reversing the
         // residual vertex direction
         for(int i = 0; i < H; i++)
@@ -350,30 +350,6 @@ namespace grid{
             }
         }
         latency += copy(sizeof(int));
-        // int flow;
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         flow = nodes[i][j].residual_capacities[FROM_SOURCE];
-                
-        //         //updates the flow matrix
-        //        // nodes[i][j].flow[FROM_SOURCE] = flow;
-
-        //         //updates the residual_capacities
-        //         nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
-        //         nodes[i][j].residual_capacities[TO_SOURCE] = flow;
-
-        //         // the excess for each node
-        //         nodes[i][j].e = flow;
-        //         sum += flow;
-
-        //         // The source height
-        //         //nodes[i][j].neighbor_heights[FROM_SOURCE] = D_S;
-        //         nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
-        //     }
-        // }
-        // E_S -= sum;
     }
 
     bool check_excess()
@@ -385,6 +361,7 @@ namespace grid{
 
     void calc_outflow()
     {
+        int temp_latency = 0;
         // Computation 1 - Compute the maximum flow to each neighbor in this iteration
         for(int i = 0; i < H; i++)
         {
@@ -398,7 +375,7 @@ namespace grid{
                 }
             }
         }
-        latency += (sub(sizeof(int)) + mux(sizeof(int)));
+        temp_latency += (sub(sizeof(int)) + mux(sizeof(int)));
 
         // Computation 2 - execute suffix sum on temp_voctor1 and save it on temp_vector
         int sum;
@@ -415,7 +392,7 @@ namespace grid{
             }
         }
 
-        latency += std::ceil(log2(OUT_VERTICES)) * add(sizeof(int)); // suffix sum
+        temp_latency += std::ceil(log2(OUT_VERTICES)) * add(sizeof(int)); // suffix sum
 
         // Computation 3 - compute sigma. non neggative flow of max of capacity or excess left 
         for(int i = 0; i < H; i++)
@@ -435,26 +412,15 @@ namespace grid{
             }
         }
 
-        latency += (sub(sizeof(int)) + min(sizeof(int)) + max (sizeof(int)) + sub(sizeof(int)));
+        temp_latency += (sub(sizeof(int)) + min(sizeof(int)) + max (sizeof(int)) + sub(sizeof(int)));
+        //cout << "calc : " << temp_latency << endl;
+        latency += temp_latency;
     }   
 
     void push_flow()
     {
-
-        // *********** REMINDER **************
-        // vector oprations in the same node but all nodes in parallel happen in O(1)
-        // moving data from one node to another cost O(1)
-
-        // Copy = 1
-        // Increment (N) = 5N
-        // Addition (N) = 10N
-        // Maximum (N) = 10N
-        // Minimum (N) = 10N
-        // Mux (N) = 3N
-        // And (N) = 3N
-        // Or (N) = 2n
-
         // naive solution  [ 3(copies)*4 (parameters) * H*W (num of nodes) * 2 (mux) ]   time (not including source and sink)
+        int temp_latency = 0 ;
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
@@ -463,7 +429,9 @@ namespace grid{
                     nodes[i][j].residual_capacities[k] = nodes[i][j].residual_capacities[k] - nodes[i][j].sigma[k];
             }
         }
-        latency += sub(sizeof(int) * OUT_VERTICES);
+        temp_latency += sub(sizeof(int) * OUT_VERTICES);
+        int r = temp_latency;
+        std::cout << "part 1 : " <<  temp_latency << endl;
 
 
         for(int i = 0; i < H; i++){
@@ -516,11 +484,17 @@ namespace grid{
                     nodes[i - 1][j].e += nodes[i - 1][j].temp_vector[UP];
                 }
             }
-
+            //for each node:
+            // copy to temp_vector
+            temp_latency += copy( sizeof(int) * (SIGMA+1));
+            // copy the vector to the four neighbors
+            temp_latency += copy(sizeof(int)) * (SIGMA+1) ;
+            // add the copy data to the residual capacities vector and to the excess
+            temp_latency += add(sizeof(int)) * 2 ;
         }
 
-        //first copy to temp, second to the nodes, and third and forth to the cf and excess
-        latency += copy( sizeof(int) * SIGMA * 4 * N);
+        std::cout << "part 2 : " <<  temp_latency - r << endl;
+        r = temp_latency;
 
         // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
         for(int i = 0; i < H; i++){
@@ -531,9 +505,10 @@ namespace grid{
         }
 
         // copy all source flow
-        latency += copy ( sizeof(int));
+        // latency += copy ( sizeof(int));
         //sum reduce
-        latency += add ( sizeof(int)) * ceil(log2(N));
+        temp_latency += copy ( sizeof(int)) * ceil(log2(N));
+        temp_latency += add ( sizeof(int)) * ceil(log2(N));
 
         // Computation 8 - adding temp_vector1 to the correct place in Cf FROM_SINK
         for(int i = 0; i < H; i++){
@@ -544,14 +519,20 @@ namespace grid{
         }
 
         // copy all source flow
-        latency += copy ( sizeof(int));
+        // latency += copy ( sizeof(int));
         //sum reduce
-        latency += add ( sizeof(int)) * ceil(log2(N));
+        temp_latency += copy ( sizeof(int)) * ceil(log2(N));
+        temp_latency += add ( sizeof(int)) * ceil(log2(N));
+
+        std::cout << "part 3 : " << temp_latency - r << endl;
+        std::cout << "flow : " << temp_latency << endl;
+        latency += temp_latency;
     }
 
 
     void relabel()
     {
+        int temp_latency = 0;
         int MAX_HEIGHT = 2*(N+2), min;
         for(int i = 0; i < H; i++)
         {
@@ -579,11 +560,11 @@ namespace grid{
 
 
         // copy all maxheight
-        latency += copy( sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES)));
+        temp_latency += copy( sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES)));
         // calculte heights
-        latency += (mux ( sizeof(int)) + add( sizeof(int)));
+        temp_latency += (mux ( sizeof(int)) + add( sizeof(int)));
         //choose min height - reduce
-        latency += (grid::min( sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES))));
+        temp_latency += (grid::min( sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES))));
 
 
         for(int i = 0; i < H; i++)
@@ -635,47 +616,17 @@ namespace grid{
             }
 
             // copy the height to temp vector
-            latency += copy( sizeof(int)) * ceil(log2(sizeof(SIGMA)));
+            temp_latency += copy( sizeof(int)) * ceil(log2(sizeof(SIGMA + 1)));
 
             // copy the height to the four neighbors
-            latency += copy( sizeof(int)) * SIGMA;
+            temp_latency += copy( sizeof(int)) * (SIGMA+1);
 
             // copy the height to the right place
-            latency += copy( sizeof(int)) * SIGMA;
-
-
+            temp_latency += copy( sizeof(int)) * (SIGMA+1);
         }
 
-        // // calcualte new heights
-        // int min;
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         min = 2*(N+2);
-        //         Node *node = &(nodes[i][j]);
-        //         for (int k = 0; k < OUT_VERTICES; k++)
-        //         {
-        //             node->temp_vector[k] = (node->residual_capacities[k] == 0) ? 2*(N+2) : 0;
-        //             node->temp_vector[k] += node->neighbor_heights[k];
-        //             min = std::min(min, node->temp_vector[k]);
-        //         }
-        //         node->d = min + 1;
-        //     }
-        // }
-
-        // // sending the neighbors the new hight
-        // for(int i = 0; i < H; i++)
-        // {
-        //     for(int j = 0; j < W; j++)
-        //     {
-        //         Node *node = &(nodes[i][j]);
-        //         node->neighbor_heights[RIGHT] = (j < W - 1) ? nodes[i][j + 1].d : 0;
-        //         node->neighbor_heights[DOWN] = (i < H - 1) ? nodes[i + 1][j].d : 0;
-        //         node->neighbor_heights[LEFT] = (j > 0) ? nodes[i][j - 1].d : 0;
-        //         node->neighbor_heights[UP] = (i > 0) ? nodes[i - 1][j].d : 0;
-        //     }
-        // }
+        //cout << "relabel : " << temp_latency << endl;
+        latency += temp_latency;
     }
 
 
