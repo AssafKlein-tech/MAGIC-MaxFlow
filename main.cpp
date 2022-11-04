@@ -1,6 +1,7 @@
 #include "goldberg.cpp"
 #include "goldberg_grid.cpp"
 #include "graph_gen.cpp"
+#include "image_read.cpp"
 #include <chrono>
 #include <string.h>
 // vector<vector<int>> capacity, flow;
@@ -8,7 +9,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 20;
+int M = 1;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -116,14 +117,19 @@ void create_nodes(graph capacity, int w, int h)
 }
 
 
-
-
 int main(int argc, char* argv[])
 {
     bool details = false; 
-    if (argc > 1)
+    if (argc < 2)
     {
-        if(strcmp(argv[1], "-details") == 0)
+        {
+            cout << "Wrong use.\nexpected \"image_path\" \"scribbles_path\"" << endl;
+            return -1;
+        } 
+    }
+    if (argc > 3)
+    {
+        if(strcmp(argv[3], "-details") == 0)
             details = true; 
         else
         {
@@ -141,7 +147,7 @@ int main(int argc, char* argv[])
     double speedup_sum = 0, potential_speedup;
     for(int i = 0; i < M; ++i)
     {
-        // graph_gen(&capacity, &n);
+        /*
         int width, height;
         grid_graph_gen(&capacity, &width, &height, &n);
         capacity[0][width*height +1] = 0;
@@ -160,8 +166,14 @@ int main(int argc, char* argv[])
         //time_span = static_cast<chrono::duration<double>>(end - start);
         //parallel_time = time_span.count();
         //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        create_nodes(capacity, width, height);
+        */
+        const char* image_path = argv[1];
+        const char* scribbles_path = argv[2];
+        int width, height;
+        build_undirected_graph(image_path,scribbles_path, &width, &height);
+        cout << "build is good. width: "<< width << " height: "<< height << endl;
         start = sc.now();
+        int maxflow = 0;
         maxflow = grid::goldberg_grid(width, height, maxflow, details);
         if ( maxflow == -1)
         {

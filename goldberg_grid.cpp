@@ -430,10 +430,10 @@ namespace grid{
             }
         }
         temp_latency += sub(sizeof(int) * OUT_VERTICES);
-        int r = temp_latency;
-        std::cout << "part 1 : " <<  temp_latency << endl;
+        //int r = temp_latency;
+        //std::cout << "part 1 : " <<  temp_latency << endl;
 
-
+        // MIX action
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
@@ -452,7 +452,6 @@ namespace grid{
                     nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector[RIGHT];
                     nodes[i][j + 1].e += nodes[i][j + 1].temp_vector[RIGHT];
                 }
-
                 
                 if ( i < H - 1)
                 {
@@ -492,9 +491,11 @@ namespace grid{
             // add the copy data to the residual capacities vector and to the excess
             temp_latency += add(sizeof(int)) * 2 ;
         }
+        // End MIX
 
-        std::cout << "part 2 : " <<  temp_latency - r << endl;
-        r = temp_latency;
+
+        //std::cout << "part 2 : " <<  temp_latency - r << endl;
+        //r = temp_latency;
 
         // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
         for(int i = 0; i < H; i++){
@@ -524,8 +525,8 @@ namespace grid{
         temp_latency += copy ( sizeof(int)) * ceil(log2(N));
         temp_latency += add ( sizeof(int)) * ceil(log2(N));
 
-        std::cout << "part 3 : " << temp_latency - r << endl;
-        std::cout << "flow : " << temp_latency << endl;
+        //std::cout << "part 3 : " << temp_latency - r << endl;
+        //std::cout << "flow : " << temp_latency << endl;
         latency += temp_latency;
     }
 
@@ -634,27 +635,30 @@ namespace grid{
         
         // Initialization 
         latency = 0;
-        initializations(width, height);
+        initializations(width, height);       
         pre_flow();
-
+        //cout << "preflow works" << endl;
         int i = 0;
         while(check_excess())
         {
+
             calc_outflow();
             push_flow();
             relabel();
+            //cout << "all func work" << endl;
             //update_excess();
             i++;  
-            if (i %10000 == 0)
+            if (i %1000 == 0)
             {
-                cout << i << endl;
-                print_stats();
+                cout << i  << " iterations" << endl;
+                //print_stats();
                 break;
+                
             }
         }
         if( details)
             cout << "number of iterations: " << i << endl;
-        if ( maxflow != E_T)
+        if ( maxflow != 0 && maxflow != E_T)
         {
             cout << "XXXXX ERROR XXXXX" << endl;
             print_stats();

@@ -70,11 +70,13 @@ int main(int argc,char** argv)
     }
   }
 
+  int maxflow = grid->get_flow();
+
   delete grid;
 
   imwrite(output,"output.png");  
 
-  printf("The result was written to \"output.png\".\n");
+  printf("The result was written to \"output.png\".\nmax flow is %d\n",maxflow);
   
   return 0;
 }
