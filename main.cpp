@@ -9,7 +9,7 @@ graph flow, capacity;
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 1;
+int M = 5;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -120,23 +120,30 @@ void create_nodes(graph capacity, int w, int h)
 int main(int argc, char* argv[])
 {
     bool details = false; 
-    if (argc < 2)
-    {
-        {
-            cout << "Wrong use.\nexpected \"image_path\" \"scribbles_path\"" << endl;
-            return -1;
-        } 
-    }
-    if (argc > 3)
-    {
-        if(strcmp(argv[3], "-details") == 0)
-            details = true; 
-        else
-        {
-            cout << "Wrong use.\nexpected \"-details\"" << endl;
-            return -1;
+    bool autogen = false;
+
+    if(strcmp(argv[1], "-autogen") == 0 || strcmp(argv[2], "-autogen") == 0 ||
+            (argv[3], "-autogen") == 0 || strcmp(argv[4], "-autogen") == 0)
+        {    
+            autogen = true; 
+            cout << "Generating random graph flag is on" << endl;
         }
+    if(strcmp(argv[1], "-details") == 0 || strcmp(argv[2], "-details") == 0 ||
+            (argv[3], "-details") == 0 || strcmp(argv[4], "-details") == 0)    
+        details = true; 
+
+    if (argc < 2 && !autogen)
+    {
+        cout << "Wrong use.\nexpected \"image_path\" \"scribbles_path\"" << endl;
+        return -1;
     }
+    if (argc > 3 && !autogen)
+    {
+
+        cout << "Wrong use.\nexpected \"-details\"\nor \"-autogen\"" << endl;
+        return -1;
+    }
+
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
@@ -167,10 +174,23 @@ int main(int argc, char* argv[])
         //parallel_time = time_span.count();
         //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         */
-        const char* image_path = argv[1];
-        const char* scribbles_path = argv[2];
         int width, height;
-        build_undirected_graph(image_path,scribbles_path, &width, &height);
+        
+        if(!autogen)
+        {
+            cout <<"Here" << argc << endl;
+
+            const char* image_path = argv[1];
+            const char* scribbles_path = argv[2];
+            
+            build_undirected_graph(image_path,scribbles_path, &width, &height);
+        }
+        else
+        {
+            grid_graph_gen(&capacity, &width, &height, &n);
+            capacity[0][width * height + 1] = 0;
+        }
+
         cout << "build is good. width: "<< width << " height: "<< height << endl;
         start = sc.now();
         int maxflow = 0;

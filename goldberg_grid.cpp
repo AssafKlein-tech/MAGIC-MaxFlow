@@ -314,7 +314,6 @@ namespace grid{
         }
         latency += copy(sizeof(int));
 
-
         // Computation 3 - updating the source height + comunication
         for(int i = 0; i < H; i++)
         {
@@ -636,12 +635,14 @@ namespace grid{
         // Initialization 
         latency = 0;
         initializations(width, height);       
+        cout << "Here1" << endl;
         pre_flow();
+        cout << "Here2" << endl;
         //cout << "preflow works" << endl;
         int i = 0;
         while(check_excess())
         {
-
+            cout << i << endl;
             calc_outflow();
             push_flow();
             relabel();

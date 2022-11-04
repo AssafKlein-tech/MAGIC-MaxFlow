@@ -11,8 +11,8 @@ using namespace std;
 
 typedef vector<int> vi;
 typedef vector<vi> graph;
-const int min_vert = 200;
-const int max_vert = 200;
+const int min_vert = 30;
+const int max_vert = 30;
 const int limit_capacity = 1000;
 const int graph_density_percent = 50;
 const int min_percent = 1;
@@ -31,6 +31,7 @@ void grid_graph_gen(graph* capacity, int *width, int *height, int *num_vertices)
 {
     int W = random_int(min_vert, max_vert);
     int H = random_int(min_vert, max_vert);
+    // cout << W << " " << H << endl;
     *width = W;
     *height = H;
     int N = (W) * (H) + 2;
