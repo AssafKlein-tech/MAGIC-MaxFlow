@@ -635,14 +635,12 @@ namespace grid{
         // Initialization 
         latency = 0;
         initializations(width, height);       
-        cout << "Here1" << endl;
         pre_flow();
-        cout << "Here2" << endl;
         //cout << "preflow works" << endl;
         int i = 0;
         while(check_excess())
         {
-            cout << i << endl;
+            // cout << i << endl;
             calc_outflow();
             push_flow();
             relabel();
@@ -653,8 +651,6 @@ namespace grid{
             {
                 cout << i  << " iterations" << endl;
                 //print_stats();
-                break;
-                
             }
         }
         if( details)
@@ -663,7 +659,7 @@ namespace grid{
         {
             cout << "XXXXX ERROR XXXXX" << endl;
             print_stats();
-            cout << "max flow: " << E_T << endl;
+            cout << "max flow grid: " << E_T << "  max flow serial: " <<  maxflow << endl;
             return -1;
         }
         else

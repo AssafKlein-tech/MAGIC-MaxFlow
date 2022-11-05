@@ -1,11 +1,10 @@
 #include "goldberg.cpp"
 #include "goldberg_grid.cpp"
-#include "graph_gen.cpp"
 #include "image_read.cpp"
 #include <chrono>
 #include <string.h>
 // vector<vector<int>> capacity, flow;
-graph flow, capacity;
+
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
@@ -121,28 +120,42 @@ int main(int argc, char* argv[])
 {
     bool details = false; 
     bool autogen = false;
+    
 
-    if(strcmp(argv[1], "-autogen") == 0 || strcmp(argv[2], "-autogen") == 0 ||
-            (argv[3], "-autogen") == 0 || strcmp(argv[4], "-autogen") == 0)
-        {    
+    if (argc == 1 || (argc == 2 && strcmp(argv[1], "-autogen") != 0))
+    {
+        cout << "Wrong use.\nexpected pathes or \"autogen\"" << endl;
+        return -1;
+    }
+    if ((argc == 2 && strcmp(argv[1], "-autogen") == 0))
             autogen = true; 
-            cout << "Generating random graph flag is on" << endl;
-        }
-    if(strcmp(argv[1], "-details") == 0 || strcmp(argv[2], "-details") == 0 ||
-            (argv[3], "-details") == 0 || strcmp(argv[4], "-details") == 0)    
-        details = true; 
 
-    if (argc < 2 && !autogen)
+    if (argc == 3)
+    {
+        if ((strcmp(argv[1], "-details") == 0 && strcmp(argv[2], "-autogen") == 0) ||
+            (strcmp(argv[2], "-details") == 0 && strcmp(argv[1], "-autogen") == 0))
+            {
+                details = true;
+                autogen = true; 
+            }
+    } 
+    if (argc == 4 && strcmp(argv[3], "-details") == 0)
+        details = true;
+    if (argc < 3 && !autogen)
     {
         cout << "Wrong use.\nexpected \"image_path\" \"scribbles_path\"" << endl;
         return -1;
     }
-    if (argc > 3 && !autogen)
+    if (argc > 3 && !details)
     {
 
         cout << "Wrong use.\nexpected \"-details\"\nor \"-autogen\"" << endl;
         return -1;
     }
+    if (autogen)
+        cout << "Generating random graph flag is on" << endl;
+    if (details)
+        cout << "Adding detailed output" << endl;
 
     chrono::steady_clock sc;
     auto start = sc.now();
@@ -178,22 +191,23 @@ int main(int argc, char* argv[])
         
         if(!autogen)
         {
-            cout <<"Here" << argc << endl;
 
             const char* image_path = argv[1];
             const char* scribbles_path = argv[2];
             
-            build_undirected_graph(image_path,scribbles_path, &width, &height);
+            build_undirected_graph(image_path,scribbles_path, &width, &height, &capacity);
+            //create_capacity_matrix(&capacity, width, height);
         }
         else
         {
             grid_graph_gen(&capacity, &width, &height, &n);
             capacity[0][width * height + 1] = 0;
+            create_nodes(capacity, width, height);
         }
-
         cout << "build is good. width: "<< width << " height: "<< height << endl;
+        n = (width * height) + 2;
         start = sc.now();
-        int maxflow = 0;
+        int maxflow = max_flow(0, n-1);
         maxflow = grid::goldberg_grid(width, height, maxflow, details);
         if ( maxflow == -1)
         {
@@ -209,6 +223,10 @@ int main(int argc, char* argv[])
         {
             cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
             cout << "potential speedup:" << potential_speedup << endl;
+        }
+        if (!autogen)
+        {
+            break;
         }
     }
     cout << "\n\nAverage potential speedup: " << (speedup_sum / M) << endl;
