@@ -14,7 +14,7 @@ graph flow, capacity;
 
 
 
-void build_undirected_graph(const char* image_path,const char* scribbles_path, int* width, int* height, graph* capacity)
+void build_undirected_graph(const char* image_path,const char* scribbles_path, int* width, int* height) //, graph* capacity)
 {
     const Image<float> image = imread<float>(image_path);
     const Image<RGB> scribbles = imread<RGB>(scribbles_path);
@@ -24,9 +24,9 @@ void build_undirected_graph(const char* image_path,const char* scribbles_path, i
     *width = w;
     *height = h;
     int index;
-    int n = w * h;
-    int size = n+2;
-    (*capacity).assign(size, vi(size, 0));
+   // int n = w * h;
+   // int size = n+2;
+   // (*capacity).assign(size, vi(size, 0));
 
     grid::initialize_nodes(w,h);
 
@@ -36,8 +36,8 @@ void build_undirected_graph(const char* image_path,const char* scribbles_path, i
         {
             index = x+y*w + 1;
             grid::set_terminal_cap(x, y, scribbles(x,y)==BLUE ? K : 0, scribbles(x,y)==RED  ? K : 0);
-            (*capacity)[0][index] = scribbles(x,y)==BLUE ? K : 0;
-            (*capacity)[index][n+1] = scribbles(x,y)==RED  ? K : 0;
+           // (*capacity)[0][index] = scribbles(x,y)==BLUE ? K : 0;
+            //(*capacity)[index][n+1] = scribbles(x,y)==RED  ? K : 0;
 
 
             if (x<w-1)
@@ -45,19 +45,19 @@ void build_undirected_graph(const char* image_path,const char* scribbles_path, i
                 const short cap = WEIGHT(image(x,y)-image(x+1,y));
 
                 grid::set_neighbor_cap(x  ,y,+1,0,cap);
-                (*capacity)[index][index + 1] = cap;
+              //  (*capacity)[index][index + 1] = cap;
                 grid::set_neighbor_cap(x+1,y,-1,0,cap);
-                (*capacity)[index + 1][index] = cap;
+               // (*capacity)[index + 1][index] = cap;
             }
 
             if (y< h-1)
             {
                 const short cap = WEIGHT(image(x,y)-image(x,y+1));
 
-                grid::set_neighbor_cap(x,y  ,0,+1,cap);
-                (*capacity)[index][index + w] = cap;
-                grid::set_neighbor_cap(x,y+1,0,-1,cap);
-                (*capacity)[index + w][index] = cap;
+                grid::set_neighbor_cap(x,y  ,0,+1,cap); //down
+               // (*capacity)[index][index + w] = cap;
+                grid::set_neighbor_cap(x,y+1,0,-1,cap); //up
+              //  (*capacity)[index + w][index] = cap;
             }
         }
     }                

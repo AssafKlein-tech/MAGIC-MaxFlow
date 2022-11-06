@@ -117,6 +117,19 @@ namespace grid{
                     }
                 }
             }
+
+        void swap_LR()
+        {
+            int temp = temp_vector[LEFT];
+            temp_vector[LEFT] = temp_vector[RIGHT];
+            temp_vector[RIGHT] = temp;
+        }
+        void swap_UD()
+        {
+            int temp = temp_vector[UP];
+            temp_vector[UP] = temp_vector[DOWN];
+            temp_vector[DOWN] = temp;
+        }
     };
 
 
@@ -239,11 +252,11 @@ namespace grid{
         if ( offset_x == 1 && offset_y  == 0)
             nodes[idxY][idxX].residual_capacities[RIGHT] = cap;
         else if ( offset_x == 0 && offset_y == -1)
-            nodes[idxY][idxX].residual_capacities[DOWN] = cap;
+            nodes[idxY][idxX].residual_capacities[UP] = cap;
         else if ( offset_x == -1 && offset_y == 0)
             nodes[idxY][idxX].residual_capacities[LEFT] = cap;
         else if ( offset_x == 0 && offset_y == 1)
-            nodes[idxY][idxX].residual_capacities[UP] = cap;
+            nodes[idxY][idxX].residual_capacities[DOWN] = cap;
         else
             throw std::invalid_argument( "received non grid offsets" );        
     }
@@ -491,7 +504,73 @@ namespace grid{
             temp_latency += add(sizeof(int)) * 2 ;
         }
         // End MIX
+        // new MIX
+        //first mix of the odd nodes (orange arrow in drawing)
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++)
+        //     {
+        //         if(i % 2 == 0)
+        //             nodes[i][j]
+        //     }
+        // }
+        // for(int i = 0; i < H; i++){
+        //     for(int j = 0; j < W; j++)
+        //     {
 
+        //         // Computation 2 - copying sigma to temp_vector1 - considering just 
+        //         // overriding sigma but it might be used in following functions
+        //         for (int k = RIGHT ; k <= SIGMA; k++) 
+        //             nodes[i][j].temp_vector[k] = nodes[i][j].sigma[k];
+ 
+        //         if ( j < W - 1)
+        //         {
+        //             // Communication 1 - placing the RIGHT sigma values in another node
+        //             nodes[i][j + 1].temp_vector[RIGHT] = nodes[i][j].temp_vector[RIGHT];
+
+        //             // Computation 3 - adding temp_vector to the correct place in Cf LEFT + excess
+        //             nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector[RIGHT];
+        //             nodes[i][j + 1].e += nodes[i][j + 1].temp_vector[RIGHT];
+        //         }
+                
+        //         if ( i < H - 1)
+        //         {
+        //             // Communication 2 - placing the DOWN sigma values in another node
+        //             nodes[i + 1][j].temp_vector[DOWN] = nodes[i][j].temp_vector[DOWN];
+
+        //             // Computation 4 - adding temp_vector to the correct place in Cf UP + excess
+        //             nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector[DOWN];
+        //             nodes[i + 1][j].e += nodes[i + 1][j].temp_vector[DOWN];
+        //         }
+
+        //         if ( j > 0 )
+        //         {
+        //              // Communication 3 - placing the LEFT sigma values in another node
+        //             nodes[i][j - 1].temp_vector[LEFT] = nodes[i][j].temp_vector[LEFT];
+
+        //             // Computation 5 - adding temp_vector to the correct place in Cf RIGHT + excess
+        //             nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector[LEFT];
+        //             nodes[i][j - 1].e += nodes[i][j - 1].temp_vector[LEFT];
+        //         }
+
+        //         if ( i > 0 )
+        //         {
+        //             // Communication 4 - placing the UP sigma values in another node
+        //             nodes[i - 1][j].temp_vector[UP] = nodes[i][j].temp_vector[UP];
+
+        //             // Computation 6 - adding temp_vector to the correct place in Cf DOWN + escess
+        //             nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector[UP];
+        //             nodes[i - 1][j].e += nodes[i - 1][j].temp_vector[UP];
+        //         }
+        //     }
+        //     //for each node:
+        //     // copy to temp_vector
+        //     temp_latency += copy( sizeof(int) * (SIGMA+1));
+        //     // copy the vector to the four neighbors
+        //     temp_latency += copy(sizeof(int)) * (SIGMA+1) ;
+        //     // add the copy data to the residual capacities vector and to the excess
+        //     temp_latency += add(sizeof(int)) * 2 ;
+        // }
+        // end MIX new
 
         //std::cout << "part 2 : " <<  temp_latency - r << endl;
         //r = temp_latency;
@@ -646,13 +725,14 @@ namespace grid{
             relabel();
             //cout << "all func work" << endl;
             //update_excess();
-            i++;  
-            if (i %1000 == 0)
+            i++; 
+            if (i % 10000 == 0)
             {
-                cout << i  << " iterations" << endl;
-                //print_stats();
-            }
+                cout << i << ", ";
+            } 
+
         }
+        cout << endl;
         if( details)
             cout << "number of iterations: " << i << endl;
         if ( maxflow != 0 && maxflow != E_T)
@@ -665,7 +745,7 @@ namespace grid{
         else
         {
             cout << "----- CORRECT -----" << endl;
-            cout << "\nnumber of cycles: " << latency << "\n" << endl;
+            cout << "\nnumber of cycles: " << latency << "\n"  << "number of iteration: "  << i << endl;
             return E_T;
         }
         

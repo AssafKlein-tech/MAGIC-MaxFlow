@@ -106,10 +106,10 @@ void create_nodes(graph capacity, int w, int h)
             grid::set_neighbor_cap(x,y,+1, 0,capacity[index][index + 1]);
 
         if (y>0  ) // up
-            grid::set_neighbor_cap(x,y, 0,+1,capacity[index][index - w]);
+            grid::set_neighbor_cap(x,y, 0,-1,capacity[index][index - w]); 
 
         if (y<h-1) // down
-            grid::set_neighbor_cap(x,y, 0,-1,capacity[index][index + w]);
+            grid::set_neighbor_cap(x,y, 0,+1,capacity[index][index + w]); 
 
     }                
 
@@ -160,11 +160,12 @@ int main(int argc, char* argv[])
     chrono::steady_clock sc;
     auto start = sc.now();
     auto end = sc.now();
-    double serial_time;
-    double parallel_time;
+    double serial_time = 0;
+    double parallel_time = 0;
     auto time_span = static_cast<chrono::duration<double>>(end - start);
     int fail_counter = 0;
     double speedup_sum = 0, potential_speedup;
+    int maxflow = 0;
     for(int i = 0; i < M; ++i)
     {
         /*
@@ -195,7 +196,7 @@ int main(int argc, char* argv[])
             const char* image_path = argv[1];
             const char* scribbles_path = argv[2];
             
-            build_undirected_graph(image_path,scribbles_path, &width, &height, &capacity);
+            build_undirected_graph(image_path,scribbles_path, &width, &height);//, &capacity);
             //create_capacity_matrix(&capacity, width, height);
         }
         else
@@ -203,11 +204,10 @@ int main(int argc, char* argv[])
             grid_graph_gen(&capacity, &width, &height, &n);
             capacity[0][width * height + 1] = 0;
             create_nodes(capacity, width, height);
+            maxflow = max_flow(0, n-1);
         }
         cout << "build is good. width: "<< width << " height: "<< height << endl;
-        n = (width * height) + 2;
         start = sc.now();
-        int maxflow = max_flow(0, n-1);
         maxflow = grid::goldberg_grid(width, height, maxflow, details);
         if ( maxflow == -1)
         {
@@ -217,19 +217,19 @@ int main(int argc, char* argv[])
         end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
-        potential_speedup = serial_time / (parallel_time/n);
-        speedup_sum += potential_speedup;
+        //potential_speedup = serial_time / (parallel_time/n);
+        //speedup_sum += potential_speedup;
         if (details)
         {
             cout << "grid matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-            cout << "potential speedup:" << potential_speedup << endl;
+            //cout << "potential speedup:" << potential_speedup << endl;
         }
         if (!autogen)
         {
             break;
         }
     }
-    cout << "\n\nAverage potential speedup: " << (speedup_sum / M) << endl;
+    //cout << "\n\nAverage potential speedup: " << (speedup_sum / M) << endl;
     if(fail_counter == 0)
         cout << "All " << M << " runs passed :)" << endl;
     else
