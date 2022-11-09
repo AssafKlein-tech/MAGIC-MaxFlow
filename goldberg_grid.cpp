@@ -488,211 +488,99 @@ namespace grid{
         //int r = temp_latency;
         //std::cout << "part 1 : " <<  temp_latency << endl;
 
-        // MIX action
-        // for(int i = 0; i < H; i++){
-        //     for(int j = 0; j < W; j++)
-        //     {
 
-        //         // Computation 2 - copying sigma to temp_vector1 - considering just 
-        //         // overriding sigma but it might be used in following functions
-        //         for (int k = RIGHT ; k <= SIGMA; k++) 
-        //             nodes[i][j].temp_vector[k] = nodes[i][j].sigma[k];
- 
-        //         if ( j < W - 1)
-        //         {
-        //             // Communication 1 - placing the RIGHT sigma values in another node
-        //             nodes[i][j + 1].temp_vector[RIGHT] = nodes[i][j].temp_vector[RIGHT];
-
-        //             // Computation 3 - adding temp_vector to the correct place in Cf LEFT + excess
-        //             nodes[i][j + 1].residual_capacities[LEFT] += nodes[i][j + 1].temp_vector[RIGHT];
-        //             nodes[i][j + 1].e += nodes[i][j + 1].temp_vector[RIGHT];
-        //         }
-                
-        //         if ( i < H - 1)
-        //         {
-        //             // Communication 2 - placing the DOWN sigma values in another node
-        //             nodes[i + 1][j].temp_vector[DOWN] = nodes[i][j].temp_vector[DOWN];
-
-        //             // Computation 4 - adding temp_vector to the correct place in Cf UP + excess
-        //             nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector[DOWN];
-        //             nodes[i + 1][j].e += nodes[i + 1][j].temp_vector[DOWN];
-        //         }
-
-        //         if ( j > 0 )
-        //         {
-        //              // Communication 3 - placing the LEFT sigma values in another node
-        //             nodes[i][j - 1].temp_vector[LEFT] = nodes[i][j].temp_vector[LEFT];
-
-        //             // Computation 5 - adding temp_vector to the correct place in Cf RIGHT + excess
-        //             nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector[LEFT];
-        //             nodes[i][j - 1].e += nodes[i][j - 1].temp_vector[LEFT];
-        //         }
-
-        //         if ( i > 0 )
-        //         {
-        //             // Communication 4 - placing the UP sigma values in another node
-        //             nodes[i - 1][j].temp_vector[UP] = nodes[i][j].temp_vector[UP];
-
-        //             // Computation 6 - adding temp_vector to the correct place in Cf DOWN + escess
-        //             nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector[UP];
-        //             nodes[i - 1][j].e += nodes[i - 1][j].temp_vector[UP];
-        //         }
-        //     }
-        //     //for each node:
-        //     // copy to temp_vector
-        //     temp_latency += copy( sizeof(int) * (SIGMA+1));
-        //     // copy the vector to the four neighbors
-        //     temp_latency += copy(sizeof(int)) * (SIGMA+1) ;
-        //     // add the copy data to the residual capacities vector and to the excess
-        //     temp_latency += add(sizeof(int)) * 2 ;
-        // }
-
-        // End MIX
-
-        // new MIX
+        int t1 = latency;
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
-
-                // Computation 2 - copying sigma to temp_vector1 - considering just 
-                // overriding sigma but it might be used in following functions
-                for (int k = RIGHT ; k <= SIDES; k++) 
-                    nodes[i][j].temp_vector[k] = nodes[i][j].sigma[k];
-            }
-        }
-        //first mix of the odd nodes (orange arrow in drawing)
-        for(int i = 0; i < H; i++){
-            for(int j = 0; j < W; j++)
-            {
-                // // Computation 2 - copying sigma to temp_vector1 - considering just 
-                // // overriding sigma but it might be used in following functions
-                // for (int k = RIGHT ; k <= SIGMA; k++) 
-                //     nodes[i][j].temp_vector[k] = nodes[i][j].sigma[k];
-
+                // Computation 2,3 - swaping the sigma values in every dimension (orange arrow in drawing)
                 if(i % 2 == 0)
-                    swap_int(&nodes[i][j].temp_vector[UP], &nodes[i][j].temp_vector[DOWN]);
+                    swap_short(&nodes[i][j].sigma[UP], &nodes[i][j].sigma[DOWN]);
 
                 if(j % 2 == 0)
-                    swap_int(&nodes[i][j].temp_vector[LEFT], &nodes[i][j].temp_vector[RIGHT]);       
+                    swap_short(&nodes[i][j].sigma[LEFT], &nodes[i][j].sigma[RIGHT]);       
 
             }
         }
+        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
+        latency += 2 * andgate(sizeof(int));
+        // Assuming 3 copies to swap, and 2 dimensions
+        latency += copy(1) * 3 * 2;
+
         // Move the info between the nodes (purple arrow in drawing)
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
                 if(i % 2 == 0)
                 {
-                    // Communication 2 - placing the DOWN sigma values in another node
+                    // Communication 1,2,3,4 - mixing the sigma values in to the corresponding nodes
                     if ( i < H - 1) 
-                        swap_int(&nodes[i][j].temp_vector[UP], &nodes[i + 1][j].temp_vector[UP]);
-                        // nodes[i + 1][j].temp_vector[DOWN] = nodes[i][j].temp_vector[DOWN];
+                        swap_short(&nodes[i][j].sigma[UP], &nodes[i + 1][j].sigma[UP]);
                     
-                    // Communication 4 - placing the UP sigma values in another node
                     if ( i > 0 )
-                        swap_int(&nodes[i][j].temp_vector[DOWN], &nodes[i - 1][j].temp_vector[DOWN]);
-                        // nodes[i - 1][j].temp_vector[UP] = nodes[i][j].temp_vector[UP];
+                        swap_short(&nodes[i][j].sigma[DOWN], &nodes[i - 1][j].sigma[DOWN]);
                 }
                 if(j % 2 == 0)
                 {
-                    // Communication 2 - placing the DOWN sigma values in another node
                     if ( j < W - 1) 
-                        swap_int(&nodes[i][j].temp_vector[LEFT], &nodes[i][j + 1].temp_vector[LEFT]);
-                        // nodes[i][j + 1].temp_vector[RIGHT] = nodes[i][j].temp_vector[RIGHT];
+                        swap_short(&nodes[i][j].sigma[LEFT], &nodes[i][j + 1].sigma[LEFT]);
 
-                    // Communication 4 - placing the UP sigma values in another node
                     if ( j > 0 )
-                        swap_int(&nodes[i][j].temp_vector[RIGHT], &nodes[i][j - 1].temp_vector[RIGHT]);
-                        // nodes[i][j - 1].temp_vector[LEFT] = nodes[i][j].temp_vector[LEFT];
+                        swap_short(&nodes[i][j].sigma[RIGHT], &nodes[i][j - 1].sigma[RIGHT]);
                 }
             }
         }
+        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
+        latency += 2 * andgate(sizeof(int));
+        // Communication costs
+        latency += W * H * 4;
+
         //second mix of the odd nodes (red arrow in drawing)
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
+                // Computation 4,5 - reswaping the sigma values in every dimension
                 if(i % 2 == 0)
-                {
-                    // cout << nodes[i][j].temp_vector[UP] << ", " << nodes[i][j].temp_vector[DOWN];
-                    swap_int(&nodes[i][j].temp_vector[UP], &nodes[i][j].temp_vector[DOWN]);
-                    // cout << " :: " << nodes[i][j].temp_vector[UP] << ", " << nodes[i][j].temp_vector[DOWN] << endl;
-                }
+                    swap_short(&nodes[i][j].sigma[UP], &nodes[i][j].sigma[DOWN]);
                 if(j % 2 == 0)
-                    swap_int(&nodes[i][j].temp_vector[LEFT], &nodes[i][j].temp_vector[RIGHT]);          
-
+                    swap_short(&nodes[i][j].sigma[LEFT], &nodes[i][j].sigma[RIGHT]);          
             }
         }
+        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
+        latency += 2 * andgate(sizeof(int));
+        // Assuming 3 copies to swap, and 2 dimensions
+        latency += copy(1) * 3 * 2;
         //Putting the sigma into place
+
         for(int i = 0; i < H; i++){
             for(int j = 0; j < W; j++)
             {
-
-                    if ( i < H - 1) 
-                    {
-                        nodes[i][j].residual_capacities[DOWN] += nodes[i][j].temp_vector[DOWN];
-                        nodes[i][j].e += nodes[i][j].temp_vector[DOWN];
-                    }
-                    if ( i > 0 )
-                    {
-                        nodes[i][j].residual_capacities[UP] += nodes[i][j].temp_vector[UP];
-                        nodes[i][j].e += nodes[i][j].temp_vector[UP];                     
-                    }
-                    if ( j < W - 1) 
-                    {
-                        nodes[i][j].residual_capacities[RIGHT] += nodes[i][j].temp_vector[RIGHT];
-                        nodes[i][j].e += nodes[i][j].temp_vector[RIGHT];
-                    }
-                    if ( j > 0 )
-                    {
-                        nodes[i][j].residual_capacities[LEFT] += nodes[i][j].temp_vector[LEFT];
-                        nodes[i][j].e += nodes[i][j].temp_vector[LEFT];
-                    }
-
-
-                // for(int k = 0; k < SIDES; k++)
-                // {
-                //     nodes[i][j].residual_capacities[k] += nodes[i][j].temp_vector[k];
-                //     nodes[i][j].e += nodes[i][j].temp_vector[k];
-                //     if (j == 0 && nodes[i][j].temp_vector[LEFT] != 0)
-                //         cout << nodes[i][j].temp_vector[LEFT] << endl;
-                //     // if (i == 0 && nodes[i][j].temp_vector[DOWN] != 0)
-                //     //     cout << nodes[i][j].temp_vector[DOWN] << endl;
-                //     // if (j==0 || i==0)
-                //     //     cout << nodes[i][j].temp_vector[k] << endl;
-                // }
-                // // Communication 2 - placing the DOWN sigma values in another node
-                // if ( i < H - 1) 
-                // {
-                //     nodes[i + 1][j].residual_capacities[UP] += nodes[i + 1][j].temp_vector[DOWN];
-                //     nodes[i + 1][j].e += nodes[i + 1][j].temp_vector[DOWN];
-                // }
-
-                // // Communication 3 - placing the LEFT sigma values in another node
-                // if ( j > 0 ) 
-                // {
-                //     nodes[i][j - 1].residual_capacities[RIGHT] += nodes[i][j - 1].temp_vector[LEFT];
-                //     nodes[i][j - 1].e += nodes[i][j - 1].temp_vector[LEFT];
-                // }
-
-                // // Communication 4 - placing the UP sigma values in another node
-                // if ( i > 0 )
-                // {
-                //     nodes[i - 1][j].residual_capacities[DOWN] += nodes[i - 1][j].temp_vector[UP];
-                //     nodes[i - 1][j].e += nodes[i - 1][j].temp_vector[UP];
-                // }   
-
+                // Computation 6,7 - adding the sigma values to the correct vectors
+                if ( i < H - 1) 
+                {
+                    nodes[i][j].residual_capacities[DOWN] += nodes[i][j].sigma[DOWN];
+                    nodes[i][j].e += nodes[i][j].sigma[DOWN];
+                }
+                if ( i > 0 )
+                {
+                    nodes[i][j].residual_capacities[UP] += nodes[i][j].sigma[UP];
+                    nodes[i][j].e += nodes[i][j].sigma[UP];                     
+                }
+                if ( j < W - 1) 
+                {
+                    nodes[i][j].residual_capacities[RIGHT] += nodes[i][j].sigma[RIGHT];
+                    nodes[i][j].e += nodes[i][j].sigma[RIGHT];
+                }
+                if ( j > 0 )
+                {
+                    nodes[i][j].residual_capacities[LEFT] += nodes[i][j].sigma[LEFT];
+                    nodes[i][j].e += nodes[i][j].sigma[LEFT];
+                }
             }
-        
-
         }
-        // end MIX new
+        // 8 adds in total
+        latency += 8 * add(sizeof(int));
 
-        //std::cout << "part 2 : " <<  temp_latency - r << endl;
-        //r = temp_latency;
-
-        
-        //std::cout << "part 3 : " << temp_latency - r << endl;
-        //std::cout << "flow : " << temp_latency << endl;
         latency += temp_latency;
     }
 
