@@ -8,7 +8,7 @@
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 5;
+int M = 10;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
