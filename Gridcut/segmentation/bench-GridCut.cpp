@@ -97,7 +97,7 @@ void run_GridCut_2D_4C(MFI* mfi,unsigned char* out_label,int* out_maxflow,double
 
   int goldberg_maxflow;
   CLOCK_START();
-  goldberg_maxflow = grid::goldberg_grid(w,h);
+  // goldberg_maxflow = grid::goldberg_grid(w,h);
   CLOCK_STOP(time_maxflow_goldberg);
 
   CLOCK_START();

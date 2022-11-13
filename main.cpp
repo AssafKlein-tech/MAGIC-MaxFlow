@@ -209,12 +209,12 @@ int main(int argc, char* argv[])
         cout << "build is good. width: "<< width << " height: "<< height << endl;
         start = sc.now();
         maxflow = grid::goldberg_grid(width, height, maxflow, details);
+        end = sc.now();
         if ( maxflow == -1)
         {
             print_C();
             fail_counter++;
         }
-        end = sc.now();
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();
         //potential_speedup = serial_time / (parallel_time/n);

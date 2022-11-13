@@ -46,3 +46,15 @@
 270000,6.497,flower
 270000,6.085,person
 307200,3.532,sponge
+270000,6.669,flower,gridcut
+270000,0.001,flower,goldberg
+270000,6.023,person,gridcut
+270000,0,person,goldberg
+307200,3.784,sponge,gridcut
+307200,0,sponge,goldberg
+270000,6.778,flower,gridcut
+270000,0.001,flower,goldberg
+270000,6.231,person,gridcut
+270000,0.001,person,goldberg
+307200,3.862,sponge,gridcut
+307200,0,sponge,goldberg

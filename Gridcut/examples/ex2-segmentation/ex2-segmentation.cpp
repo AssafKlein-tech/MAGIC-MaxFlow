@@ -7,9 +7,23 @@
 
 #include <cstdio>
 #include <cmath>
-
+#include <chrono>
+#include <iostream>
+#include <stdio.h>
+#include <cmath>
+#include <vector>
+#include <queue>
+#include <string>
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <random>
 #include <Image.h>
 #include <GridCut/GridGraph_2D_4C.h>
+#include <chrono>
+using namespace std;
 
 #define K 1000
 #define SIGMA2 0.012f
@@ -18,8 +32,12 @@
 #define RED  RGB(1,0,0)
 #define BLUE RGB(0,0,1)
 
+
+
 int main(int argc,char** argv)
 {
+  chrono::steady_clock sc;
+
   typedef GridGraph_2D_4C<short,short,int> Grid;
 
   const Image<float> image = imread<float>("image.png");
@@ -56,8 +74,11 @@ int main(int argc,char** argv)
     }
   }
 
-
+  auto start = sc.now();
   grid->compute_maxflow();
+  auto end = sc.now();
+  double time_span = static_cast<chrono::duration<double>>(end - start).count();
+
 
 
   Image<RGB> output(width,height);
@@ -76,7 +97,7 @@ int main(int argc,char** argv)
 
   imwrite(output,"output.png");  
 
-  printf("The result was written to \"output.png\".\nmax flow is %d\n",maxflow);
+  printf("The result was written to \"output.png\".\nmax flow is %d\n The time is %f\n",maxflow, time_span);
   
   return 0;
 }
