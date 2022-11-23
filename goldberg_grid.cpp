@@ -128,6 +128,8 @@ namespace grid
     // initialization functions
     void initialize_nodes(int w, int h)
     {
+        W = w;
+        H = h;
         vector<Node> temp_v;
         nodes.clear();
         for (int i = 0; i < h; i++)
@@ -159,6 +161,15 @@ namespace grid
             nodes[idxY][idxX].residual_capacities[DOWN] = cap;
         else
             throw std::invalid_argument("received non grid offsets");
+    }
+
+    void initializations(int width, int height)
+    {
+        N = W * H;
+        E_S = 0;
+        E_T = 0;
+        D_S = N + 2;
+        D_T = 0;
     }
 
     //builds graph to dfs and invokes the calculation
@@ -194,28 +205,13 @@ namespace grid
         return source_cut.size();
     }
 
-    void initializations(int width, int height)
-    {
-        W = width;
-        H = height;
-        N = W * H;
-        S = 0;
-        T = N + 1;
-        E_S = 0;
-        E_T = 0;
-        // initialize_nodes(capacity);
-        // initialize_graphs();
-    }
 
+    // PPPR functions
     void pre_flow()
     {
-        D_S = N + 2;
-        D_T = 0;
-
         int sum = 0;
 
-        // Computation 1 - pushing the flow from the source, reversing the
-        // residual vertex direction
+        // Computation 1 - pushing the flow from the source, reversing the residual vertex direction
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
@@ -223,7 +219,7 @@ namespace grid
                 nodes[i][j].residual_capacities[TO_SOURCE] = nodes[i][j].residual_capacities[FROM_SOURCE];
             }
         }
-        latency += copy(sizeof(int));
+        latency += copy(sizeof(short));
 
         // Computation 2 - updating the excess after flow push from source
         for (int i = 0; i < H; i++)
@@ -233,9 +229,9 @@ namespace grid
                 nodes[i][j].e = nodes[i][j].residual_capacities[FROM_SOURCE];
             }
         }
-        latency += copy(sizeof(int));
+        latency += copy(sizeof(short));
 
-        // Computation 3 - updating the source height + comunication
+        // Computation 3 - Broudcasting the source height
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
@@ -243,7 +239,7 @@ namespace grid
                 nodes[i][j].neighbor_heights[TO_SOURCE] = D_S;
             }
         }
-        latency += copy(std::ceil(log2(N)));
+        latency += copy(sizeof(int));
 
         // Computation 4 - updating the sum - do in parallel
         for (int i = 0; i < H; i++)
@@ -253,12 +249,9 @@ namespace grid
                 sum += nodes[i][j].residual_capacities[FROM_SOURCE];
             }
         }
-        latency += add(ceil(std::log2(N)));
-
-        // Computation 5 - updating the out excess - do in parallel time
         E_S -= sum;
+        latency += add(sizeof(short)) * ceil(std::log2(N));
 
-        latency += sub(sizeof(sum)); // we only need the 2 complement can we optimize?
 
         // Computation 6 - reseting the residual vertex from source
         for (int i = 0; i < H; i++)
@@ -268,7 +261,7 @@ namespace grid
                 nodes[i][j].residual_capacities[FROM_SOURCE] = 0;
             }
         }
-        latency += copy(sizeof(int));
+        latency += copy(sizeof(short));
     }
 
     bool check_excess()
@@ -581,12 +574,12 @@ namespace grid
         latency += temp_latency;
     }
 
-    int goldberg_grid(int width, int height, int maxflow, bool details)
+    int goldberg_grid(int maxflow, bool details)
     {
 
         // Initialization
         latency = 0;
-        initializations(width, height);
+        initializations();
         pre_flow();
 
         int i = 0;
