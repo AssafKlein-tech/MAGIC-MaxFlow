@@ -196,10 +196,6 @@ namespace grid
                 index = 1 + j + i * W;
                 if (nodes[i][j].residual_capacities[FROM_SOURCE] != 0)
                     g.addEdge(0, index);
-                // if(grid::nodes[i][j].residual_capacities[grid::TO_SOURCE])
-                //   g.addEdge(index,0);
-                // if(grid::nodes[i][j].residual_capacities[grid::FROM_SINK])
-                //   g.addEdge(sink,index);
                 if (nodes[i][j].residual_capacities[TO_SINK] != 0)
                     g.addEdge(index, sink);
                 if (nodes[i][j].residual_capacities[RIGHT] != 0)
