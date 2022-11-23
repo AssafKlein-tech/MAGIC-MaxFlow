@@ -163,7 +163,7 @@ namespace grid
             throw std::invalid_argument("received non grid offsets");
     }
 
-    void initializations(int width, int height)
+    void initializations()
     {
         N = W * H;
         E_S = 0;
@@ -173,7 +173,7 @@ namespace grid
     }
 
     //builds graph to dfs and invokes the calculation
-    int graph_dfs(int W, int H)
+    int graph_dfs()
     {
         const int sink = W * H + 1;
         Graph g(2 + W * H);
@@ -273,6 +273,7 @@ namespace grid
     void calc_outflow()
     {
         int temp_latency = 0;
+
         // Computation 1 - Compute the maximum flow to each neighbor in this iteration
         for (int i = 0; i < H; i++)
         {
@@ -286,7 +287,7 @@ namespace grid
                 }
             }
         }
-        temp_latency += (sub(sizeof(int)) + mux(sizeof(int)));
+        temp_latency += (sub(sizeof(int)) + andgate(sizeof(int)) + 1);
 
         // Computation 2 - execute suffix sum on temp_voctor1 and save it on temp_vector
         int sum;
@@ -303,7 +304,7 @@ namespace grid
             }
         }
 
-        temp_latency += std::ceil(log2(OUT_VERTICES)) * add(sizeof(int)); // suffix sum
+        temp_latency += std::ceil(log2(OUT_VERTICES)) * add(sizeof(short)); // suffix sum
 
         // Computation 3 - compute sigma. non neggative flow of max of capacity or excess left
         for (int i = 0; i < H; i++)
@@ -323,8 +324,8 @@ namespace grid
             }
         }
 
-        temp_latency += (sub(sizeof(int)) + min(sizeof(int)) + max(sizeof(int)) + sub(sizeof(int)));
-        // cout << "calc : " << temp_latency << endl;
+        temp_latency += (sub(sizeof(short)) + min(sizeof(short)) + max(sizeof(short)) + sub(sizeof(short)));
+        //cout << "calc : " << temp_latency << endl;
         latency += temp_latency;
     }
 
@@ -606,7 +607,7 @@ namespace grid
         else
         {
             cout << "----- CORRECT -----" << endl;
-            int cut = graph_dfs(width, height);
+            int cut = graph_dfs();
             cout << "\nnumber of cycles: " << latency << "\n"
                  << "number of iteration: " << i << "\nsourcecut: " << cut << endl;
             return E_T;

@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
         }
         cout << "build is good. width: "<< width << " height: "<< height << endl;
         start = sc.now();
-        maxflow = grid::goldberg_grid(width, height, maxflow, details);
+        maxflow = grid::goldberg_grid(maxflow, details);
         end = sc.now();
         if ( maxflow == -1)
         {
