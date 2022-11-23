@@ -1,6 +1,6 @@
 CXX=g++ 
 RM= rm -f
-#CXXFLAGS= -Wall -g -std=c++11
+CXXFLAGS=-O3
 EXEC=prog.exe
 
 $(EXEC): main.o goldberg.o goldberg_grid.o image_read.o

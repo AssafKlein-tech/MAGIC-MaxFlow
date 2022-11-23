@@ -547,9 +547,11 @@ void GridGraph_2D_4C<type_tcap,type_ncap,type_flow>::compute_maxflow()
   }
 
   QF = QN[0];
-
+  int iter = 0;
   while(1)
   {
+    iter++;
+
     int vs;
     int vt;
     Parent st;
@@ -562,6 +564,7 @@ void GridGraph_2D_4C<type_tcap,type_ncap,type_flow>::compute_maxflow()
     augment(vs,vt,st);
     adopt(TIME,YOFS);
   }
+  std::cout << "GridCut num of iterations: " << iter << std::endl;
 }
 
 template <typename type_tcap,typename type_ncap,typename type_flow>

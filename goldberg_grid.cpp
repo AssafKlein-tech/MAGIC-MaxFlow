@@ -11,7 +11,6 @@ using namespace std;
 
 namespace grid{
 
-
     const int INF = 1000000000;
     const int RIGHT = 0;
     const int DOWN = 1;

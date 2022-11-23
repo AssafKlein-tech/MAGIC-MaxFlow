@@ -1,6 +1,7 @@
 #include "goldberg.cpp"
 #include "goldberg_grid.cpp"
 #include "image_read.cpp"
+#include "dfs.cpp"
 #include <chrono>
 #include <string.h>
 // vector<vector<int>> capacity, flow;
@@ -8,7 +9,7 @@
 vi height, excess, seen;
 queue<int> excess_vertices;
 int n;
-int M = 10;
+int M = 1;
 
 // int n = 6;
 // graph capacity{{0, 16, 13, 0, 0, 0},
@@ -121,7 +122,6 @@ int main(int argc, char* argv[])
     bool details = false; 
     bool autogen = false;
     
-
     if (argc == 1 || (argc == 2 && strcmp(argv[1], "-autogen") != 0))
     {
         cout << "Wrong use.\nexpected pathes or \"autogen\"" << endl;
@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
     int fail_counter = 0;
     double speedup_sum = 0, potential_speedup;
     int maxflow = 0;
+    int width, height;
     for(int i = 0; i < M; ++i)
     {
         /*
@@ -188,7 +189,7 @@ int main(int argc, char* argv[])
         //parallel_time = time_span.count();
         //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
         */
-        int width, height;
+        
         
         if(!autogen)
         {
@@ -237,6 +238,9 @@ int main(int argc, char* argv[])
         cout << "failed runs:" << fail_counter << endl;
         cout << "total runs:" << M << endl;
     }
+
+    graph_dfs(width, height);
+    cout << "\nsource cut contains " << source_cut.size() << " nodes out of " << (width*height + 2) << endl;
 
     return 0;
 }

@@ -685,7 +685,6 @@ namespace grid{
         latency += temp_latency;
     }
 
-
     int goldberg_grid(int width, int height, int maxflow, bool details){
         
         // Initialization 

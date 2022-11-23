@@ -40,9 +40,12 @@ int main(int argc,char** argv)
 
   typedef GridGraph_2D_4C<short,short,int> Grid;
 
-  const Image<float> image = imread<float>("image.png");
-  const Image<RGB> scribbles = imread<RGB>("scribbles.png");
+  // const Image<float> image = imread<float>("image.png");
+  // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
+  const Image<float> image = imread<float>("elephant.png");
+  const Image<RGB> scribbles = imread<RGB>("elephant-scribbles.png");
+
   const int width  = image.width();
   const int height = image.height();
 
