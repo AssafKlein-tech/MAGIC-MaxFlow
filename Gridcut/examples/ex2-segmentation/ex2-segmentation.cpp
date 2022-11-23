@@ -43,8 +43,8 @@ int main(int argc,char** argv)
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
-  const Image<float> image = imread<float>("elephant.png");
-  const Image<RGB> scribbles = imread<RGB>("elephant-scribbles.png");
+  const Image<float> image = imread<float>("image.png");
+  const Image<RGB> scribbles = imread<RGB>("scribbles.png");
 
   const int width  = image.width();
   const int height = image.height();
@@ -85,12 +85,15 @@ int main(int argc,char** argv)
 
 
   Image<RGB> output(width,height);
+  int cutsize = 0;
 
   for (int y=0;y<height;y++)
   {
     for (int x=0;x<width;x++)
     {
       output(x,y) = image(x,y)*(grid->get_segment(grid->node_id(x,y)) ? RED : BLUE);
+      if (!grid->get_segment(grid->node_id(x,y)))
+         cutsize+=1;
     }
   }
 
@@ -100,7 +103,7 @@ int main(int argc,char** argv)
 
   imwrite(output,"output.png");  
 
-  printf("The result was written to \"output.png\".\nmax flow is %d\n The time is %f\n",maxflow, time_span);
+  printf("The result was written to \"output.png\".\nmax flow is %d\n The time is %f\n cutsize is %d\n",maxflow, time_span, cutsize);
   
   return 0;
 }

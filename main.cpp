@@ -1,7 +1,6 @@
 #include "goldberg.cpp"
 #include "goldberg_grid.cpp"
 #include "image_read.cpp"
-#include "dfs.cpp"
 #include <chrono>
 #include <string.h>
 // vector<vector<int>> capacity, flow;
@@ -239,9 +238,7 @@ int main(int argc, char* argv[])
         cout << "total runs:" << M << endl;
     }
 
-    graph_dfs(width, height);
-    cout << "\nsource cut contains " << source_cut.size() << " nodes out of " << (width*height + 2) << endl;
+    //cout << "\nsource cut contains " << source_cut.size() << " nodes out of " << (width*height + 2) << endl;
 
     return 0;
 }
-

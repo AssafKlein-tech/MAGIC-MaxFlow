@@ -47,38 +47,4 @@ void Graph::DFS(int vertex) {
       DFS(*i);
 }
 
-int graph_dfs(int W, int H) {
-  const int sink = W*H + 1;
-  Graph g(2 + W * H);
-  int index;
-  for(int i = 0; i < H; i++)
-  {
-    for(int j = 0; j < W; j++)
-    {
-      index = 1 + j + i * W;
-      if(grid::nodes[i][j].residual_capacities[grid::FROM_SOURCE])
-        g.addEdge(0,index);
-      if(grid::nodes[i][j].residual_capacities[grid::TO_SOURCE])
-        g.addEdge(index,0);
-      if(grid::nodes[i][j].residual_capacities[grid::FROM_SINK])
-        g.addEdge(sink,index);
-      if(grid::nodes[i][j].residual_capacities[grid::TO_SINK])
-        g.addEdge(index,sink);        
-      if(grid::nodes[i][j].residual_capacities[grid::RIGHT])
-        g.addEdge(index,index + 1);
-      if(grid::nodes[i][j].residual_capacities[grid::DOWN])
-        g.addEdge(index,index + W);
-      if(grid::nodes[i][j].residual_capacities[grid::LEFT])
-        g.addEdge(index,index - 1);
-      if(grid::nodes[i][j].residual_capacities[grid::UP])
-        g.addEdge(index,index - W); 
-
-    }
-  }
-
-  g.DFS(sink);
-
-  return 0;
-}
-
 #endif
