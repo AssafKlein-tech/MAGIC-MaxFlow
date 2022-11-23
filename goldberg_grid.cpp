@@ -28,6 +28,7 @@ namespace grid
     const int SIDES = 4;
     const int SIZE = 8;
     const int BITSINBYTE = 8;
+    const int TILE_WIDTH = 32;
 
 
     //Latency calculation function
@@ -74,6 +75,16 @@ namespace grid
     int orgate(int size_in_bytes)
     {
         return size_in_bytes * BITSINBYTE * 2;
+    }
+
+    int norgate(int size_in_bytes)
+    {
+        return size_in_bytes * BITSINBYTE;
+    }
+
+    int swap(int size_in_bytes)
+    {
+        return 4;
     }
 
     typedef vector<int> vi;
@@ -331,60 +342,39 @@ namespace grid
 
     void push_flow()
     {
-        // naive solution  [ 3(copies)*4 (parameters) * H*W (num of nodes) * 2 (mux) ]   time (not including source and sink)
-        int temp_latency = 0;
-
-        // Computation 7 - adding temp_vector1 to the correct place in Cf FROM_SOURCE
+        // Computation 1 - adding sigma to the correct place in Cf FROM_SOURCE, FROM_SINK and adding the sum to E_T and E_S
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
             {
                 nodes[i][j].residual_capacities[FROM_SOURCE] += nodes[i][j].sigma[TO_SOURCE];
+                nodes[i][j].residual_capacities[FROM_SINK] += nodes[i][j].sigma[TO_SINK];
+                E_T += nodes[i][j].sigma[TO_SINK];
                 E_S += nodes[i][j].sigma[TO_SOURCE];
             }
         }
 
-        // copy all source flow
-        // latency += copy ( sizeof(int));
-        // sum reduce
-        temp_latency += copy(sizeof(int)) * ceil(log2(N));
-        temp_latency += add(sizeof(int)) * ceil(log2(N));
+        // sum reduce + adding to residual FS FT
+        latency += 2 * copy(sizeof(short)) * ceil(log2(N));
+        latency += 2 * add(sizeof(short)) * (ceil(log2(N))+1) ;
 
-        // Computation 8 - adding temp_vector1 to the correct place in Cf FROM_SINK
+        // Computation 2 - subtracting sigma from Cf
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
             {
-                nodes[i][j].residual_capacities[FROM_SINK] += nodes[i][j].sigma[TO_SINK];
-                E_T += nodes[i][j].sigma[TO_SINK];
-            }
-        }
-
-        // copy all source flow
-        // latency += copy ( sizeof(int));
-        // sum reduce
-        temp_latency += copy(sizeof(int)) * ceil(log2(N));
-        temp_latency += add(sizeof(int)) * ceil(log2(N));
-
-        for (int i = 0; i < H; i++)
-        {
-            for (int j = 0; j < W; j++)
-            {
-                // Computation 1 - subtracting sigma from Cf
                 for (int k = RIGHT; k < OUT_VERTICES; k++)
                     nodes[i][j].residual_capacities[k] = nodes[i][j].residual_capacities[k] - nodes[i][j].sigma[k];
             }
         }
-        temp_latency += sub(sizeof(int) * OUT_VERTICES);
-        // int r = temp_latency;
-        // std::cout << "part 1 : " <<  temp_latency << endl;
+        latency += sub(sizeof(short)) * OUT_VERTICES;
 
-        int t1 = latency;
+        // Computation 2,3 - swaping the sigma values in every dimension (orange arrow in drawing) 
+        //(RIGHT<->LEFT, DOEN <->UP) only on the even nodes in every dimension
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
             {
-                // Computation 2,3 - swaping the sigma values in every dimension (orange arrow in drawing)
                 if (i % 2 == 0)
                     swap_short(&nodes[i][j].sigma[UP], &nodes[i][j].sigma[DOWN]);
 
@@ -392,10 +382,9 @@ namespace grid
                     swap_short(&nodes[i][j].sigma[LEFT], &nodes[i][j].sigma[RIGHT]);
             }
         }
-        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
-        latency += 2 * andgate(sizeof(int));
-        // Assuming 3 copies to swap, and 2 dimensions
-        latency += copy(1) * 3 * 2;
+
+        // Assuming 2 copies to swap, and 2 dimensions
+        latency += swap(sizeof(short)) * SIDES/2 * TILE_WIDTH/2;
 
         // Move the info between the nodes (purple arrow in drawing)
         for (int i = 0; i < H; i++)
@@ -421,11 +410,8 @@ namespace grid
                 }
             }
         }
-        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
-        latency += 2 * andgate(sizeof(int));
-        // Communication costs per XBar
-        // latency += 32*32 * 4;
-        latency += W * H * 4;
+
+        latency += TILE_WIDTH * TILE_WIDTH * SIDES * 0.5 * ( copy(sizeof(short)) + swap(sizeof(short)));
 
         // second mix of the odd nodes (red arrow in drawing)
         for (int i = 0; i < H; i++)
@@ -439,11 +425,8 @@ namespace grid
                     swap_short(&nodes[i][j].sigma[LEFT], &nodes[i][j].sigma[RIGHT]);
             }
         }
-        // Checking if even requires checking LSB for one dimension, but checking another bit for the other dimension
-        latency += 2 * andgate(sizeof(int));
-        // Assuming 3 copies to swap, and 2 dimensions
-        latency += copy(1) * 3 * 2;
-        // Putting the sigma into place
+
+        latency += swap(sizeof(short)) * SIDES/2 * TILE_WIDTH/2;
 
         for (int i = 0; i < H; i++)
         {
@@ -473,9 +456,7 @@ namespace grid
             }
         }
         // 8 adds in total
-        latency += 8 * add(sizeof(int));
-
-        latency += temp_latency;
+        latency += 2 * SIDES * add(sizeof(short));
     }
 
     void relabel()
@@ -506,12 +487,16 @@ namespace grid
             }
         }
 
-        // copy all maxheight
-        temp_latency += copy(sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES)));
+        // checks if risdual k is 0
+        temp_latency += norgate(sizeof(short)) * OUT_VERTICES;
+        // broucast AND with max height
+        temp_latency += andgate(sizeof(short)) * OUT_VERTICES;
         // calculte heights
-        temp_latency += (mux(sizeof(int)) + add(sizeof(int)));
+        temp_latency +=  add(sizeof(int)) * OUT_VERTICES ;
         // choose min height - reduce
-        temp_latency += (grid::min(sizeof(int)) * ceil(log2(sizeof(OUT_VERTICES))));
+        temp_latency += (grid::min(sizeof(int)) * ceil(log2(OUT_VERTICES)));
+        //add 1 to height
+        temp_latency +=  add(sizeof(int)) * OUT_VERTICES;
 
         for (int i = 0; i < H; i++)
         {
@@ -560,18 +545,9 @@ namespace grid
                     nodes[i - 1][j].neighbor_heights[DOWN] = nodes[i - 1][j].temp_vector[DOWN];
                 }
             }
-
-            // copy the height to temp vector
-            temp_latency += copy(sizeof(int)) * ceil(log2(sizeof(SIDES + 1)));
-
-            // copy the height to the four neighbors
-            temp_latency += copy(sizeof(int)) * (SIDES + 1);
-
-            // copy the height to the right place
-            temp_latency += copy(sizeof(int)) * (SIDES + 1);
         }
-
-        // cout << "relabel : " << temp_latency << endl;
+        //brouudcast height to 4 neighbors
+        temp_latency += copy(sizeof(int)) * SIDES;
         latency += temp_latency;
     }
 
