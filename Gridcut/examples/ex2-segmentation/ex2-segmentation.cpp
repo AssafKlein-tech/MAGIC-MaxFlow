@@ -25,13 +25,13 @@
 #include <chrono>
 using namespace std;
 
-#define K 1000
+// (v^2e c) 
+#define K 16000
 #define SIGMA2 0.012f
 #define WEIGHT(A) (short)(1+K*std::exp((-(A)*(A)/SIGMA2)))
 
 #define RED  RGB(1,0,0)
 #define BLUE RGB(0,0,1)
-
 
 
 int main(int argc,char** argv)
@@ -43,11 +43,13 @@ int main(int argc,char** argv)
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
-  const Image<float> image = imread<float>("image.png");
-  const Image<RGB> scribbles = imread<RGB>("scribbles.png");
+  const Image<float> image = imread<float>("IDO.png");
+  const Image<RGB> scribbles = imread<RGB>("IDO-scribbles.png");
 
-  const int width  = image.width();
-  const int height = image.height();
+  const int width  = scribbles.width();
+  const int height = scribbles.height();
+
+  cout << "width: " << width << " height: " << height << endl;
 
   Grid* grid = new Grid(width,height);
   

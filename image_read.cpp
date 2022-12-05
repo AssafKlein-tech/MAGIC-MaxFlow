@@ -6,7 +6,7 @@
 
 #define RED  RGB(1,0,0)
 #define BLUE RGB(0,0,1)
-#define K 1000
+#define K 16000
 #define SIGMA2 0.012f
 #define WEIGHT(A) (short)(1+K*std::exp((-(A)*(A)/SIGMA2)))
 
