@@ -120,6 +120,7 @@ int main(int argc, char* argv[])
 {
     bool details = false; 
     bool autogen = false;
+    bool color = false;
     
     if (argc == 1 || (argc == 2 && strcmp(argv[1], "-autogen") != 0))
     {
@@ -138,8 +139,13 @@ int main(int argc, char* argv[])
                 autogen = true; 
             }
     } 
-    if (argc == 4 && strcmp(argv[3], "-details") == 0)
+    if (argc >= 4 && strcmp(argv[3], "-details") == 0)
         details = true;
+    if (argc >= 4 && strcmp(argv[3], "-color") == 0)
+        color = true;
+    if (argc == 5 && strcmp(argv[4], "-color") == 0)
+        color = true;
+
     if (argc < 3 && !autogen)
     {
         cout << "Wrong use.\nexpected \"image_path\" \"scribbles_path\"" << endl;
@@ -167,37 +173,12 @@ int main(int argc, char* argv[])
     int maxflow = 0;
     int width, height;
     for(int i = 0; i < M; ++i)
-    {
-        /*
-        int width, height;
-        grid_graph_gen(&capacity, &width, &height, &n);
-        capacity[0][width*height +1] = 0;
-        if (details)
-            cout << "\ngraph size:" << n << endl;
-        start = sc.now();     // start timer
-        int maxflow = max_flow(0, n-1);
-        end = sc.now();       // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
-        time_span = static_cast<chrono::duration<double>>(end - start);
-        serial_time = time_span.count();
-        if ( details)
-            cout << "sequential maxflow:" << maxflow  << " time:" << serial_time << endl;
-        //start = sc.now();
-        //maxflow = goldberg(capacity, n);
-        //end = sc.now();
-        //time_span = static_cast<chrono::duration<double>>(end - start);
-        //parallel_time = time_span.count();
-        //cout << "matrix maxflow:" << maxflow << " time:" << parallel_time << endl;
-        */
-        
-        
+    {   
         if(!autogen)
         {
-
             const char* image_path = argv[1];
-            const char* scribbles_path = argv[2];
-            
-            build_undirected_graph(image_path,scribbles_path, &width, &height);//, &capacity);
-            //create_capacity_matrix(&capacity, width, height);
+            const char* scribbles_path = argv[2];   
+            build_undirected_graph(image_path,scribbles_path, &width, &height, color);//, &capacity);
         }
         else
         {
@@ -214,6 +195,11 @@ int main(int argc, char* argv[])
         {
             print_C();
             fail_counter++;
+        }
+        if (!autogen)
+        {
+            const char* image_path = argv[1];
+            print_image(image_path, width, height, color);
         }
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();

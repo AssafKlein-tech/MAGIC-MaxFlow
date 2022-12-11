@@ -26,8 +26,8 @@
 using namespace std;
 
 // (v^2e c) 
-#define K 6000
-#define SIGMA2 0.1f
+#define K 1000
+#define SIGMA2 930.0f
 #define WEIGHT(A) (short)(1+K*std::exp((-(A)*(A)/SIGMA2)))
 
 //#define PI 3.14159265
@@ -105,8 +105,8 @@ int main(int argc,char** argv)
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
-  const Image<RGB> image = imread<RGB>("nemo.png");
-  const Image<RGB> scribbles = imread<RGB>("nemo-scribbles.png");
+  const Image<RGB> image = imread<RGB>("colors1.png");
+  const Image<RGB> scribbles = imread<RGB>("colors1-scribbles.png");
 
   const int width  = scribbles.width();
   const int height = scribbles.height();

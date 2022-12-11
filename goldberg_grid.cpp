@@ -195,16 +195,19 @@ namespace grid
             {
                 index = 1 + j + i * W;
                 if (nodes[i][j].residual_capacities[FROM_SOURCE] != 0)
-                    g.addEdge(0, index);
+                {
+                    g.addEdge(0,index);
+                    //cout << index << endl;
+                }
                 if (nodes[i][j].residual_capacities[TO_SINK] != 0)
                     g.addEdge(index, sink);
-                if (nodes[i][j].residual_capacities[RIGHT] != 0)
+                if (j < W-1 && nodes[i][j].residual_capacities[RIGHT] != 0)
                     g.addEdge(index, index + 1);
-                if (nodes[i][j].residual_capacities[DOWN] != 0)
+                if (i > 0 && nodes[i][j].residual_capacities[DOWN] != 0)
                     g.addEdge(index, index + W);
-                if (nodes[i][j].residual_capacities[LEFT] != 0)
+                if (j > 0 && nodes[i][j].residual_capacities[LEFT] != 0)
                     g.addEdge(index, index - 1);
-                if (nodes[i][j].residual_capacities[UP] != 0)
+                if (i < H-1 && nodes[i][j].residual_capacities[UP] != 0)
                     g.addEdge(index, index - W);
             }
         }
@@ -349,7 +352,6 @@ namespace grid
                 E_S += nodes[i][j].sigma[TO_SOURCE];
             }
         }
-
         // sum reduce + adding to residual FS FT
         latency += 2 * copy(sizeof(short)) * ceil(log2(N));
         latency += 2 * add(sizeof(short)) * (ceil(log2(N))+1) ;
@@ -380,7 +382,7 @@ namespace grid
         }
 
         // Assuming 2 copies to swap, and 2 dimensions
-        latency += swap(sizeof(short)) * SIDES/2 * TILE_WIDTH/2;
+        latency += swap(sizeof(short)) * (SIDES/2) * sizeof(short) * BITSINBYTE;
 
         // Move the info between the nodes (purple arrow in drawing)
         for (int i = 0; i < H; i++)
@@ -406,9 +408,9 @@ namespace grid
                 }
             }
         }
-
-        latency += TILE_WIDTH * TILE_WIDTH * SIDES * 0.5 * ( copy(sizeof(short)) + swap(sizeof(short)));
-
+        
+        latency += TILE_WIDTH * TILE_WIDTH * (swap(sizeof(short))) * (SIDES/2);
+        
         // second mix of the odd nodes (red arrow in drawing)
         for (int i = 0; i < H; i++)
         {
@@ -422,8 +424,8 @@ namespace grid
             }
         }
 
-        latency += swap(sizeof(short)) * SIDES/2 * TILE_WIDTH/2;
-
+        latency += swap(sizeof(short)) * (SIDES/2) * sizeof(short) * BITSINBYTE;
+        
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
@@ -484,15 +486,15 @@ namespace grid
         }
 
         // checks if risdual k is 0
-        temp_latency += norgate(sizeof(short)) * OUT_VERTICES;
+        latency += norgate(sizeof(short)) * OUT_VERTICES;
         // broucast AND with max height
-        temp_latency += andgate(sizeof(short)) * OUT_VERTICES;
+        latency += andgate(sizeof(short)) * OUT_VERTICES;
         // calculte heights
-        temp_latency +=  add(sizeof(int)) * OUT_VERTICES ;
+        latency +=  add(sizeof(int)) * OUT_VERTICES ;
         // choose min height - reduce
-        temp_latency += (grid::min(sizeof(int)) * ceil(log2(OUT_VERTICES)));
+        latency += (grid::min(sizeof(int)) * ceil(log2(OUT_VERTICES)));
         //add 1 to height
-        temp_latency +=  add(sizeof(int)) * OUT_VERTICES;
+        latency +=  add(sizeof(int)) * OUT_VERTICES;
 
         for (int i = 0; i < H; i++)
         {
@@ -543,8 +545,7 @@ namespace grid
             }
         }
         //brouudcast height to 4 neighbors
-        temp_latency += copy(sizeof(int)) * SIDES;
-        latency += temp_latency;
+        latency += copy(sizeof(int)) * SIDES;
     }
 
     int goldberg_grid(int maxflow, bool details)
@@ -564,7 +565,7 @@ namespace grid
             i++;
             if (i % 10000 == 0)
             {
-                cout << i << ", " << endl;
+                cout << i << endl;
             }
         }
 

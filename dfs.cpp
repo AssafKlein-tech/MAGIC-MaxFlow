@@ -13,7 +13,7 @@ list<int> source_cut;
 class Graph {
   int numVertices;
   list<int> *adjLists;
-  bool *visited;
+  vector<bool> visited;
 
    public:
   Graph(int V);
@@ -25,7 +25,7 @@ class Graph {
 Graph::Graph(int vertices) {
   numVertices = vertices;
   adjLists = new list<int>[vertices];
-  visited = new bool[vertices];
+  visited = vector<bool>(vertices,false);
 }
 
 // Add edges
@@ -39,12 +39,12 @@ void Graph::DFS(int vertex) {
   list<int> adjList = adjLists[vertex];
   source_cut.push_back(vertex);
 
-  // cout << vertex << " ";
-
   list<int>::iterator i;
   for (i = adjList.begin(); i != adjList.end(); ++i)
+  {
     if (!visited[*i])
       DFS(*i);
+  }  
 }
 
 #endif

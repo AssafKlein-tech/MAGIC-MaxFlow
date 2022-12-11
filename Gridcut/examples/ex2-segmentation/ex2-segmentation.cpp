@@ -26,8 +26,8 @@
 using namespace std;
 
 // (v^2e c) 
-#define K 16000
-#define SIGMA2 0.012f
+#define K 1000
+#define SIGMA2 930.0f
 #define WEIGHT(A) (short)(1+K*std::exp((-(A)*(A)/SIGMA2)))
 
 #define RED  RGB(1,0,0)
