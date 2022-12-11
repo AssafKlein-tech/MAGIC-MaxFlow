@@ -1,4 +1,5 @@
 #include "goldberg.cpp"
+#include "graph_gen.cpp"
 #include "goldberg_grid.cpp"
 #include "image_read.cpp"
 #include <chrono>
@@ -139,11 +140,11 @@ int main(int argc, char* argv[])
                 autogen = true; 
             }
     } 
-    if (argc >= 4 && strcmp(argv[3], "-details") == 0)
+    if (argc >= 5 && strcmp(argv[4], "-details") == 0)
         details = true;
-    if (argc >= 4 && strcmp(argv[3], "-color") == 0)
+    if (argc >= 5 && strcmp(argv[4], "-color") == 0)
         color = true;
-    if (argc == 5 && strcmp(argv[4], "-color") == 0)
+    if (argc == 6 && strcmp(argv[5], "-color") == 0)
         color = true;
 
     if (argc < 3 && !autogen)
@@ -177,7 +178,7 @@ int main(int argc, char* argv[])
         if(!autogen)
         {
             const char* image_path = argv[1];
-            const char* scribbles_path = argv[2];   
+            const char* scribbles_path = argv[2];    
             build_undirected_graph(image_path,scribbles_path, &width, &height, color);//, &capacity);
         }
         else
@@ -199,7 +200,8 @@ int main(int argc, char* argv[])
         if (!autogen)
         {
             const char* image_path = argv[1];
-            print_image(image_path, width, height, color);
+            const char* image_out = argv[3];  
+            print_image(image_path, image_out, width, height, color);
         }
         time_span = static_cast<chrono::duration<double>>(end - start);
         parallel_time = time_span.count();

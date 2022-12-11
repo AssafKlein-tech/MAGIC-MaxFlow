@@ -117,7 +117,7 @@ void build_undirected_graph(const char* image_path,const char* scribbles_path, i
     build_undirected_graph_grey( image_path, scribbles_path, width, height);
 }
 
-void print_image(const char* image_path, int width, int height, bool color = false)
+void print_image(const char* image_path,const char* image_out_path, int width, int height, bool color = false)
 {
     Image<RGB> output(width,height);
     int cutsize = 0;
@@ -163,6 +163,6 @@ void print_image(const char* image_path, int width, int height, bool color = fal
             }  
         }
     }
-    imwrite(output,"output.png");  
+    imwrite(output,image_out_path);  
     
 }

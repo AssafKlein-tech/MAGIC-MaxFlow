@@ -43,8 +43,8 @@ int main(int argc,char** argv)
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
-  const Image<float> image = imread<float>("IDO.png");
-  const Image<RGB> scribbles = imread<RGB>("IDO-scribbles.png");
+  const Image<float> image = imread<float>("hands.png");
+  const Image<RGB> scribbles = imread<RGB>("handsscribbles.png");
 
   const int width  = scribbles.width();
   const int height = scribbles.height();

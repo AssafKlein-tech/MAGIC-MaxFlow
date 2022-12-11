@@ -105,8 +105,8 @@ int main(int argc,char** argv)
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
   
-  const Image<RGB> image = imread<RGB>("colors1.png");
-  const Image<RGB> scribbles = imread<RGB>("colors1-scribbles.png");
+  const Image<RGB> image = imread<RGB>("color/bird.png");
+  const Image<RGB> scribbles = imread<RGB>("color/bird-scribbles.png");
 
   const int width  = scribbles.width();
   const int height = scribbles.height();
@@ -155,10 +155,10 @@ int main(int argc,char** argv)
     for (int x=0;x<width;x++)
     {
       if (grid->get_segment(grid->node_id(x,y)))
-        output(x,y) = RGB(min((image(x,y).r + 0.5),1.0),image(x,y).g,image(x,y).b);
+        output(x,y) = RGB(min((image(x,y).r + 0.35),1.0),image(x,y).g,image(x,y).b);
       else
       {
-        output(x,y) = RGB(image(x,y).r,image(x,y).g,min((image(x,y).b + 0.5),1.0));
+        output(x,y) = RGB(image(x,y).r,image(x,y).g,min((image(x,y).b + 0.35),1.0));
       }
        
       if (!grid->get_segment(grid->node_id(x,y)))

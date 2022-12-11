@@ -42,3 +42,5 @@ Benchmarks/*
 
 *.zip
 *.tbz2
+*.png
+*output.png
