@@ -260,7 +260,7 @@ namespace grid
             }
         }
         E_S -= sum;
-        latency += add(sizeof(short)) * ceil(std::log2(N));
+        latency += sub(sizeof(short)) * ceil(std::log2(N));
 
 
         // Computation 6 - reseting the residual vertex from source
@@ -425,7 +425,7 @@ namespace grid
         }
 
         latency += swap(sizeof(short)) * (SIDES/2) * sizeof(short) * BITSINBYTE;
-        
+
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
@@ -494,7 +494,7 @@ namespace grid
         // choose min height - reduce
         latency += (grid::min(sizeof(int)) * ceil(log2(OUT_VERTICES)));
         //add 1 to height
-        latency +=  add(sizeof(int)) * OUT_VERTICES;
+        latency +=  inc(sizeof(int)) * OUT_VERTICES;
 
         for (int i = 0; i < H; i++)
         {
@@ -561,16 +561,13 @@ namespace grid
         {
             calc_outflow();
             push_flow();
-            relabel();
+            relabel();            
             i++;
             if (i % 10000 == 0)
             {
                 cout << i << endl;
             }
         }
-
-        if (details)
-            cout << "number of iterations: " << i << endl;
         if (maxflow != 0 && maxflow != E_T)
         {
             cout << "XXXXX ERROR XXXXX" << endl;

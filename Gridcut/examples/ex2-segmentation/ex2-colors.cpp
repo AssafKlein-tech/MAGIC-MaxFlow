@@ -27,13 +27,13 @@ using namespace std;
 
 // (v^2e c) 
 #define K 1000
-#define SIGMA2 930.0f
-#define WEIGHT(A) (short)(1+K*std::exp((-(A)*(A)/SIGMA2)))
+
 
 //#define PI 3.14159265
 
 #define RED  RGB(1,0,0)
 #define BLUE RGB(0,0,1)
+
 
 short l1(RGB p1, RGB p2)
 {
@@ -50,18 +50,25 @@ short linf(RGB p1, RGB p2)
   return max((p1.b - p2.b),max((p1.g - p2.g),(p1.r - p2.r)));
 }
 
-short hsi(RGB p1, RGB p2)
+float hsi(RGB p1, RGB p2)
 {
-  float I1 = (p1.r + p1.g + p1.b)*255/3;
-  float S1 = 1 - (min(min(p1.r,p1.g), p1.b))*255/I1;
+  float I1 = (p1.r + p1.g + p1.b)/3;
+  float S1 = 1 - (min(min(p1.r,p1.g), p1.b))/I1;
   float H1 =  atan2(sqrt(3)*(p1.g - p1.b),(2*p1.r - p1.g - p1.b));
-  float I2 = (p2.r + p2.g + p2.b)*255/3;
-  float S2 = 1 - (min(min(p2.r,p2.g), p2.b))*255/I1;
+  if (p1.g  < p1.b)
+    H1 = 2*M_PI - H1;
+  float I2 = (p2.r + p2.g + p2.b)/3;
+  float S2 = 1 - (min(min(p2.r,p2.g), p2.b))/I1;
   float H2 =  atan2(sqrt(3)*(p2.g - p2.b),(2*p2.r - p2.g - p2.b));
-
-  //return sqrt(pow((I1- I2),2) + pow((S1- S2),2) + pow((H1 - H2),2));
-  return sqrt(pow((I1- I2),2) + pow(S1,2) + pow(S2,2) - 2*S1*S2*cos(H2-H1));
+  if (p2.g  < p2.b)
+    H2 = 2*M_PI - H2;
+  //cout << "I1 " << I1 << " S1 " << S1<< " H1 " << H1 << " , I2 " << I2 << " S2 " << S2 <<" H2 "<<  H2 << " " << endl;
+  if(std::isnan(H2) || std::isnan(H1) || std::isnan(S1) || std::isnan(S2))
+    return pow((I1 - I2),2);
+  return (pow((I1- I2),2) + pow(S1,2) + pow(S2,2) - 2*S1*S2*cosf((H2-H1)));
 }
+
+
 
 class Lab
 {
@@ -93,6 +100,45 @@ short Lab_dist(RGB p1, RGB p2)
 }
 
 
+float get_dist(RGB p1, RGB p2)
+{
+    return hsi(p1, p2);
+}
+
+short weight(float dist, float sigma )
+{
+    return (short)(10+K*std::exp((-(dist)/(2*sigma))));
+}
+
+float get_sigma(const string image_path)
+{
+    const Image<RGB> image = imread<RGB>(image_path);
+    int w = image.width();
+    int h = image.height();
+    int num_of_edges = w*h*2 - w - h;
+    int edge_num = 0;
+    float diff;
+    double temp_avg = 0;
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            if (x<w-1)
+            {
+
+                diff = get_dist(image(x,y),image(x+1,y));
+                temp_avg += (diff - temp_avg)/(++edge_num);
+            }
+
+            if (y< h-1)
+            {
+                diff = get_dist(image(x,y),image(x,y+1));
+                temp_avg += (diff - temp_avg)/(++edge_num);
+            }
+        }
+    }
+    return float(temp_avg);
+}
 
 int main(int argc,char** argv)
 {
@@ -104,16 +150,21 @@ int main(int argc,char** argv)
 
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
-  
-  const Image<RGB> image = imread<RGB>("color/bird.png");
-  const Image<RGB> scribbles = imread<RGB>("color/bird-scribbles.png");
+  string photo = "leaf";
+  const string dir = "../../../photos/";
+  const string image_path = dir + "color/" + photo +".png";
+  const string scribbles_path = dir + "scribbles/" + photo +".png";
+  const string out_path = dir + "/" + photo +"-out.png";
+  const float sigma = get_sigma(image_path);
+  const Image<RGB> image = imread<RGB>(image_path);
+  const Image<RGB> scribbles = imread<RGB>(scribbles_path);
 
   const int width  = scribbles.width();
   const int height = scribbles.height();
-  cout << "width: " << width << " height: " << height << endl;
+  cout << "width: " << width << " height: " << height << " sigma: " << sigma <<endl;
 
   Grid* grid = new Grid(width,height);
-  
+  short cap;
   for (int y=0;y<height;y++)
   {
     for (int x=0;x<width;x++)
@@ -124,7 +175,7 @@ int main(int argc,char** argv)
 
       if (x<width-1)
       {
-        const short cap = WEIGHT(hsi(image(x,y),image(x+1,y)));
+        cap = weight(get_dist(image(x,y),image(x+1,y)),sigma);
 
         grid->set_neighbor_cap(grid->node_id(x  ,y),+1,0,cap);
         grid->set_neighbor_cap(grid->node_id(x+1,y),-1,0,cap);
@@ -132,7 +183,7 @@ int main(int argc,char** argv)
 
       if (y<height-1)
       {
-        const short cap = WEIGHT(hsi(image(x,y),image(x,y+1)));
+        cap = weight(get_dist(image(x,y),image(x,y+1)),sigma);
 
         grid->set_neighbor_cap(grid->node_id(x,y  ),0,+1,cap);
         grid->set_neighbor_cap(grid->node_id(x,y+1),0,-1,cap);
@@ -170,7 +221,7 @@ int main(int argc,char** argv)
 
   delete grid;
 
-  imwrite(output,"output.png");  
+  imwrite(output,"bird-hsi.png");  
 
   printf("The result was written to \"output.png\".\nmax flow is %d\n The time is %f\n cutsize is %d\n",maxflow, time_span, cutsize);
   
