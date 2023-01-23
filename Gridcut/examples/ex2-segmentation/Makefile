@@ -1,5 +1,5 @@
 ex2-segmentation: ex2-segmentation.cpp
-	g++ -I../../include -I../include  -pthread -o ex2-segmentation ex2-segmentation.cpp
+	g++ -g -I../../include -I../include  -pthread -o ex2-segmentation ex2-segmentation.cpp
 
 ex2-colors: ex2-colors.cpp
 	g++ -I../../include -I../include -o ex2-colors ex2-colors.cpp
