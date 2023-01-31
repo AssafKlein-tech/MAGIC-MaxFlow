@@ -150,7 +150,7 @@ int main(int argc,char** argv)
 
   // const Image<float> image = imread<float>("image.png");
   // const Image<RGB> scribbles = imread<RGB>("scribbles.png");
-  string photo = "leaf";
+  string photo = "Statue-of-Liberty";
   const string dir = "../../../photos/";
   const string image_path = dir + "color/" + photo +".png";
   const string scribbles_path = dir + "scribbles/" + photo +".png";

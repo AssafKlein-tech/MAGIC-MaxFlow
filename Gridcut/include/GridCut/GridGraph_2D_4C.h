@@ -564,7 +564,6 @@ void GridGraph_2D_4C<type_tcap,type_ncap,type_flow>::compute_maxflow()
     augment(vs,vt,st);
     adopt(TIME,YOFS);
   }
-  std::cout << "GridCut num of iterations: " << iter << std::endl;
 }
 
 template <typename type_tcap,typename type_ncap,typename type_flow>
@@ -787,7 +786,7 @@ GridGraph_2D_4C<type_tcap,type_ncap,type_flow>::GridGraph_2D_4C(int w,int h) :
                           W*H*sizeof(int)+64+                   // free_nodes
                           W*H*sizeof(int)+64+                   // QN
                           0);
-
+  //std::cout<< "grid graph mem size: " << mem_pool_size << std::endl;
   mem_pool = (unsigned char*)calloc(mem_pool_size,1);
 
   if (mem_pool==NULL)
